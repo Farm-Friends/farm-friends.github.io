@@ -1,1 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard | Rural Network</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+    .user-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 6px; }
+    button { margin-right: 10px; padding: 8px 16px; cursor: pointer; border: none; font-weight: bold; }
+    .approve { background-color: #2e7d32; color: white; }
+    .reject { background-color: #d32f2f; color: white; }
+  </style>
+</head>
+<body>
+  <h2>Pending Member Applications</h2>
+  <div id="pending-list">Loading pending applications...</div>
 
+  <script>
+    const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
+    async function loadPendingUsers() {
+      const { data: users, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('status', 'pending');
+
+      const container = document.getElementById('pending-list');
+      if (error || !users.length) {
+        container.innerHTML = '<p>No pending applications.</p>';
+        return;
+      }
+
+      container.innerHTML = users.map(u => `
+        <div class="user-card">
+          <h4>${u.full_name}</h4>
+          <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
+          <button class="approve" onclick="updateStatus('${u.id}', 'active')">Approve</button>
+          <button class="reject" onclick="updateStatus('${u.id}', 'rejected')">Reject</button>
+        </div>
+      `).join('');
+    }
+
+    async function updateStatus(userId, newStatus) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', userId);
+
+      if (error) alert('Error updating user status: ' + error.message);
+      else loadPendingUsers();
+    }
+
+    loadPendingUsers();
+  </script>
+</body>
+</html>

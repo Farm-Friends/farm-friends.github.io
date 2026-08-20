@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Board | Rural Network</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
+    .job-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+    .emergency { border-left: 6px solid #d32f2f; background-color: #fff8f8; }
+    form { background: #f9f9f9; padding: 15px; margin-bottom: 30px; border-radius: 6px; }
+    input, select, textarea, button { display: block; width: 100%; margin: 8px 0; padding: 8px; box-sizing: border-box; }
+    button { background: #2e7d32; color: white; border: none; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>Submit a Job Request</h2>
+  <form id="job-form">
+    <input type="text" id="title" placeholder="Job Title (e.g., Hay Baling)" required />
+    <select id="work_type" required>
+      <option value="Fencing">Fencing</option>
+      <option value="Livestock">Livestock</option>
+      <option value="Harvest">Harvest</option>
+      <option value="Maintenance">General Maintenance</option>
+    </select>
+    <textarea id="description" placeholder="Work details..." required></textarea>
+    <input type="number" id="hours_min" placeholder="Min Hours" required />
+    <input type="number" id="hours_max" placeholder="Max Hours" required />
+    <input type="text" id="zip_code" placeholder="Zip Code" required />
+    <input type="tel" id="contact_phone" placeholder="Contact Phone Number" required />
+    <input type="date" id="date_needed" required />
+    <label><input type="checkbox" id="is_emergency" style="display:inline; width:auto;"> Emergency / Short-Notice Job</label>
+    <button type="submit">Post Job</button>
+  </form>
 
+  <h2>Available Listings</h2>
+  <div id="job-list">Loading jobs...</div>
+
+  <script>
+    const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+
+    async function fetchJobs() {
+      const { data: jobs, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+
+      const container = document.getElementById('job-list');
+      if (error || !jobs.length) {
+        container.innerHTML = '<p>No open jobs available.</p>';
+        return;
+      }
+
+      container.innerHTML = jobs.map(j => `
+        <div class="job-card ${j.is_emergency ? 'emergency' : ''}">
+          <h3>${j.title} ${j.is_emergency ? '🚨 [EMERGENCY]' : ''}</h3>
+          <p><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
+          <p>${j.description}</p>
+          <p><strong>Est. Time:</strong> ${j.hours_min} - ${j.hours_max} hrs | <strong>Date:</strong> ${j.date_needed}</p>
+          <p><strong>Contact:</strong> ${j.contact_phone}</p>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('job-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = (await supabase.auth.getUser()).data.user;
+
+      const { error } = await supabase.from('jobs').insert([{
+        poster_id: user.id,
+        title: document.getElementById('title').value,
+        work_type: document.getElementById('work_type').value,
+        description: document.getElementById('description').value,
+        hours_min: document.getElementById('hours_min').value,
+        hours_max: document.getElementById('hours_max').value,
+        zip_code: document.getElementById('zip_code').value,
+        contact_phone: document.getElementById('contact_phone').value,
+        date_needed: document.getElementById('date_needed').value,
+        is_emergency: document.getElementById('is_emergency').checked
+      }]);
+
+      if (error) alert('Error posting job: ' + error.message);
+      else {
+        document.getElementById('job-form').reset();
+        fetchJobs();
+      }
+    });
+
+    fetchJobs();
+  </script>
+</body>
+</html>

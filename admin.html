@@ -17,7 +17,9 @@
   <div id="pending-list">Loading pending applications...</div>
 
   <script>
-    const supabase = supabase.createClient('YOUR_SUPABASE_URL', 'YOUR_SUPABASE_ANON_KEY');
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadPendingUsers() {
       const { data: users, error } = await supabase

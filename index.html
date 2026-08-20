@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Join Rural Network</title>
-  <!-- Supabase JS Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; max-width: 400px; margin: 40px auto; padding: 20px; }
@@ -25,9 +24,8 @@
   </form>
 
   <script>
-    // Initialize Supabase
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
@@ -36,7 +34,6 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
-      // Submit user data to Supabase
       const { data, error } = await supabase.auth.signUp({
         email: email,
         password: password,
@@ -54,7 +51,7 @@
         alert('Error: ' + error.message);
       } else {
         alert('Application submitted! Your account is pending admin approval.');
-        window.location.href = '/pending.html';
+        window.location.href = 'pending.html';
       }
     });
   </script>

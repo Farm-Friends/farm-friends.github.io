@@ -1,131 +1,206 @@
-/* =========================================
-   BASE STYLES & LAYOUT
-   ========================================= */
-body { 
-  font-family: system-ui, -apple-system, sans-serif; 
-  background-color: #fdfbf7; 
-  color: #333; 
-  max-width: 800px; 
-  margin: 20px auto; 
-  padding: 0 20px; 
+/* =========================================================
+   RURAL NETWORK - NIGHT SHIFT (DARK MODE)
+   ========================================================= */
+
+/* Global Settings */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #121212; /* Deep Black background */
+  color: #e0e0e0; /* Off-white text to reduce eye strain */
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
 }
 
+/* Container for narrower pages (Login/Sign up/Suspended) */
 .narrow-container {
   max-width: 500px;
-  margin-top: 40px;
+  margin: 0 auto;
 }
 
-.narrow-container h1, .narrow-container h2, .narrow-container h3 {
+/* Panels and Cards */
+.panel, .job-card, .user-card {
+  background-color: #1e1e1e; /* Dark gray for depth */
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   HEADER & NAVIGATION
+   ========================================================= */
+/* Vertically offset the header and nav to reduce clutter */
+.header {
+  display: flex;
+  flex-direction: column; /* Stacks items vertically */
+  align-items: center;
   text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #333;
 }
 
-h1, h2, h3 { 
-  font-family: Georgia, serif; 
-  color: #2c4c3b; 
+.header h2 {
+  margin-top: 0;
+  margin-bottom: 15px; /* Creates the vertical offset from buttons */
+  color: #10b981; /* Emerald green title */
 }
 
-.header { 
-  display: flex; justify-content: space-between; align-items: center; 
-  border-bottom: 3px solid #4a7c59; 
-  padding-bottom: 10px; margin-bottom: 20px; 
+/* Container for the nav buttons */
+.header div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
 }
 
-.hidden { display: none; }
-
-/* =========================================
-   CARDS & PANELS
-   ========================================= */
-.panel, form { 
-  background: #ffffff; 
-  padding: 20px; 
-  margin-bottom: 30px; 
-  border-radius: 8px; 
-  border: 1px solid #e0dcd3; 
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
-}
-
-/* Remove extra padding when a form is inside a panel */
-.panel form {
-  padding: 0;
-  border: none;
-  box-shadow: none;
-  margin-bottom: 0;
-}
-
-.job-card, .user-card { 
-  background: #ffffff; 
-  border: 1px solid #e0dcd3; 
-  padding: 15px; 
-  margin-bottom: 15px; 
-  border-radius: 8px; 
-}
-
-.emergency { 
-  border-left: 6px solid #c9302c; 
-  background-color: #fff5f5; 
-}
-
-/* =========================================
-   FORMS & INPUTS
-   ========================================= */
-input, select, textarea { 
-  display: block; 
-  width: 100%; 
-  margin: 8px 0 16px; 
-  padding: 12px; 
-  border: 1px solid #ccc; 
-  border-radius: 4px; 
-  box-sizing: border-box; 
-  font-family: inherit; 
-}
-
-input:focus, select:focus, textarea:focus { 
-  outline: none; 
-  border-color: #4a7c59; 
-  box-shadow: 0 0 0 2px rgba(74,124,89,0.2); 
-}
-
-.filter-row { display: flex; gap: 10px; }
-.filter-row > * { flex: 1; }
-
-/* =========================================
+/* =========================================================
    BUTTONS
-   ========================================= */
-button { 
+   ========================================================= */
+button {
+  background-color: #10b981; /* Emerald Green */
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px; /* Reduced padding so they feel less massive */
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+button:hover {
+  background-color: #059669; /* Darker Emerald on hover */
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Secondary Actions / Logout */
+.btn-logout {
+  background-color: #3f3f46 !important; /* Neutral gray */
+  color: #ffffff !important;
+}
+
+.btn-logout:hover {
+  background-color: #52525b !important;
+}
+
+/* Inline text buttons */
+.toggle-btn {
+  background: none;
+  color: #10b981;
+  text-decoration: underline;
+  box-shadow: none;
+  padding: 0;
+  margin-top: 15px;
+  font-weight: normal;
   display: block;
+  text-align: center;
   width: 100%;
-  background: #4a7c59; 
-  color: white; 
-  border: none; 
-  padding: 12px;
-  font-weight: bold; 
-  cursor: pointer; 
-  font-size: 16px; 
-  border-radius: 4px;
-  transition: background 0.2s; 
 }
 
-button:hover { background: #3b6347; }
-
-/* Specialty Buttons */
-.btn-logout { 
-  width: auto; 
-  background: #8b5a2b; 
-  padding: 8px 16px; 
-  margin: 0;
+.toggle-btn:hover {
+  background: none;
+  color: #059669;
 }
-.btn-logout:hover { background: #6b4420; }
 
-.toggle-btn { 
-  background: none; 
-  color: #4a7c59; 
-  text-decoration: underline; 
-  margin-top: 10px;
-  margin-bottom: 20px; 
-  text-align: center; 
+/* Destructive / Danger buttons (Overrides inline styles) */
+button[style*="#c9302c"], button.reject, button[onclick*="delete"] {
+  background-color: #ef4444 !important; /* Bright red */
 }
-.toggle-btn:hover { background: none; color: #2c4c3b; }
+button[style*="#c9302c"]:hover, button.reject:hover, button[onclick*="delete"]:hover {
+  background-color: #dc2626 !important;
+}
 
-.approve, .reject { width: auto; display: inline-block; padding: 10px 16px; margin-right: 10px;}
-.reject { background: #c9302c; }
-.reject:hover { background: #a02622; }
+/* Warning buttons (Overrides inline styles) */
+button[style*="#8b5a2b"] {
+  background-color: #f59e0b !important; /* Amber */
+  color: #121212 !important;
+}
+button[style*="#8b5a2b"]:hover {
+  background-color: #d97706 !important;
+}
+
+/* =========================================================
+   FORMS & INPUTS
+   ========================================================= */
+input[type="text"], input[type="email"], input[type="password"], 
+input[type="tel"], input[type="number"], input[type="date"], 
+select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  background-color: #2a2a2a; /* Slightly lighter than panels */
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #e0e0e0;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+/* Checkboxes */
+input[type="checkbox"] {
+  width: auto;
+  margin-right: 10px;
+}
+
+/* =========================================================
+   LAYOUT UTILITIES
+   ========================================================= */
+.hidden {
+  display: none !important;
+}
+
+.filter-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-row input, .filter-row select, .filter-row button {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 130px;
+}
+
+/* Emergency job highlight */
+.job-card.emergency {
+  border-left: 4px solid #ef4444;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* =========================================================
+   MOBILE RESPONSIVENESS
+   ========================================================= */
+@media (max-width: 600px) {
+  body {
+    padding: 15px 10px;
+  }
+  
+  .filter-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filter-row input, .filter-row select, .filter-row button {
+    width: 100%;
+  }
+}

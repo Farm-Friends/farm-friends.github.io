@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Account Suspended | Rural Network</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="narrow-container" style="text-align: center;">
+  
+  <div class="panel" style="border-top: 6px solid #c9302c;">
+    <h2 style="color: #c9302c;">Account Suspended</h2>
+    <p>Your access to the Rural Network has been revoked due to multiple grievances or a violation of our community guidelines.</p>
+    <p>We take the safety and reliability of our local network seriously. If you believe this is an error, please contact a network administrator.</p>
+    <br>
+    <button id="logout-btn" class="btn-logout" style="margin: 0 auto; background-color: #333;">Log Out</button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

@@ -13,6 +13,37 @@
       padding: 20px 15px;
     }
 
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #333;
+      gap: 15px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    /* Mobile Responsive Header Layout */
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 12px 16px;
+      }
+    }
+
     .card {
       background: #1e1e1e;
       border: 1px solid #333;
@@ -172,12 +203,12 @@
 <body>
 
   <div class="jobs-container">
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #333;">
+    <header class="header-container">
       <div>
         <h1 style="margin: 0; font-size: 24px;">🌾 Rural Network Job Board</h1>
         <p style="margin: 4px 0 0 0; color: #a1a1aa; font-size: 13px;">Local community labor, equipment sharing, and farm requests</p>
       </div>
-      <nav style="display: flex; align-items: center; gap: 15px;">
+      <nav class="nav-links">
         <a href="profile.html" style="color: #10b981; text-decoration: none; font-weight: bold; font-size: 14px;">My Profile</a>
         <a href="grievance.html" style="color: #ef4444; text-decoration: none; font-size: 14px;">File Grievance</a>
         <a id="admin-link" href="admin.html" style="display: none; color: #f59e0b; text-decoration: none; font-size: 14px; font-weight: bold;">Admin Panel</a>
@@ -338,7 +369,6 @@
       fetchJobs();
     });
 
-    // Handle Job Submission
     document.getElementById('job-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const { error } = await supabaseClient.from('jobs').insert([{
@@ -353,7 +383,7 @@
         contact_phone: document.getElementById('contact_phone').value,
         date_needed: document.getElementById('date_needed').value, 
         is_emergency: document.getElementById('is_emergency').checked,
-        status: 'open' // Explicitly set status to match fetch criteria
+        status: 'open'
       }]);
 
       if (error) {
@@ -369,11 +399,9 @@
       const typeFilter = document.getElementById('filter_type').value;
       const zipFilter = document.getElementById('filter_zip').value;
       
-      // Fix timezone offset issue by retrieving local YYYY-MM-DD
       const localDate = new Date();
       const today = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
 
-      // Query jobs with status 'open' or 'active'
       let query = supabaseClient
         .from('jobs')
         .select('*, profiles(full_name, badges)')

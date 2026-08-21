@@ -3,15 +3,18 @@
    ========================================================= */
 
 /* Global Settings */
+/* Global Settings */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #121212; /* Deep Black background */
   color: #e0e0e0; /* Off-white text to reduce eye strain */
-  margin: 0;
+  
+  /* NEW SIZING RULES */
+  max-width: 800px; /* Keeps the page from getting too wide on desktop */
+  margin: 0 auto; /* Centers the whole page on the screen */
   padding: 20px;
   line-height: 1.6;
 }
-
 /* Container for narrower pages (Login/Sign up/Suspended) */
 .narrow-container {
   max-width: 500px;

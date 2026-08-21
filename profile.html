@@ -23,7 +23,6 @@
       gap: 15px;
     }
 
-    /* Mobile Responsive Header Layout */
     @media (max-width: 768px) {
       .header-container {
         flex-direction: column;
@@ -59,9 +58,7 @@
         <p style="color: #a1a1aa; font-size: 14px;">Loading badges...</p>
       </div>
 
-      <div id="my-strikes" style="margin-top: 15px; font-weight: bold;">
-        <!-- Strikes render here -->
-      </div>
+      <div id="my-strikes" style="margin-top: 15px; font-weight: bold;"></div>
     </div>
 
     <!-- UPDATE PROFILE FORM -->
@@ -89,7 +86,6 @@
           <option value="500">Any distance / Statewide</option>
         </select>
 
-        <!-- JOB NOTIFICATION ALERT TOGGLE -->
         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
           <div>
             <label for="notify_jobs_nearby" style="display: block; color: #fff; font-weight: bold; font-size: 14px; cursor: pointer;">Nearby Job Email Alerts</label>
@@ -110,7 +106,7 @@
       </div>
     </div>
 
-    <!-- ARCHIVED POSTINGS SECTION (FLOATING TOP 10 FILLED) -->
+    <!-- ARCHIVED POSTINGS SECTION -->
     <div class="panel" style="background: #1e1e1e; border: 1px solid #333; margin-bottom: 20px;">
       <h3 style="margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 18px;">Job History (Last 10 Filled)</h3>
       <div id="archived-jobs-container">
@@ -119,8 +115,13 @@
     </div>
   </main>
 
+  <footer class="footer">
+    <div class="container">
+      <p>© Farm Friends • <a href="about.html">About &amp; Community Guide</a></p>
+    </div>
+  </footer>
+
   <script>
-    // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -154,7 +155,6 @@
         return;
       }
 
-      // Populate Form & Track Original Values
       originalName = profile.full_name || '';
       lastNameChange = profile.last_name_change ? new Date(profile.last_name_change).getTime() : null;
 
@@ -164,7 +164,6 @@
       document.getElementById('max_distance').value = profile.max_distance || 25;
       document.getElementById('notify_jobs_nearby').checked = profile.notify_jobs_nearby ?? true;
 
-      // Check if name change is currently restricted
       if (lastNameChange) {
         const timePassed = Date.now() - lastNameChange;
         if (timePassed < TWO_WEEKS_MS) {
@@ -175,7 +174,6 @@
         }
       }
 
-      // Render Badges
       const badgeContainer = document.getElementById('my-badges');
       const badges = profile.badges || [];
       
@@ -190,7 +188,6 @@
         }).join('');
       }
 
-      // Render Strikes
       const strikesContainer = document.getElementById('my-strikes');
       const strikes = profile.strikes || 0;
       
@@ -201,9 +198,7 @@
       }
     }
 
-    // LOAD ACTIVE AND ARCHIVED JOBS FOR LOGGED-IN USER
     async function loadUserJobs() {
-      // 1. Active Jobs
       const { data: activeJobs, error: activeErr } = await supabaseClient
         .from('jobs')
         .select('*')
@@ -231,7 +226,6 @@
         `).join('');
       }
 
-      // 2. Archived / Filled Jobs (Floating capped at 10 - Excludes Description, Emergency Tag, and Contact Phone)
       const { data: filledJobs, error: filledErr } = await supabaseClient
         .from('jobs')
         .select('*')
@@ -269,7 +263,6 @@
       }
     }
 
-    // MARK JOB AS FILLED (MOVES TO ARCHIVE)
     async function markJobFilled(jobId) {
       const { error } = await supabaseClient
         .from('jobs')
@@ -283,7 +276,6 @@
       }
     }
 
-    // DELETE JOB PERMANENTLY (DOES NOT GO TO ARCHIVE)
     async function deleteJob(jobId) {
       if (!confirm('Are you sure you want to permanently delete this posting? It will not be archived.')) return;
 
@@ -299,7 +291,6 @@
       }
     }
 
-    // Handle Profile Update
     document.getElementById('profile-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -316,7 +307,6 @@
         notify_jobs_nearby: notifyNearby
       };
 
-      // Handle Name Change Restriction Logic
       if (newName !== originalName) {
         if (lastNameChange) {
           const timePassed = Date.now() - lastNameChange;
@@ -328,7 +318,6 @@
           }
         }
 
-        // If allowed, append name and new timestamp
         updates.full_name = newName;
         updates.last_name_change = new Date().toISOString();
       }
@@ -339,7 +328,7 @@
         alert("Error updating profile: " + error.message);
       } else {
         alert("Profile updated successfully!");
-        loadProfileData(); // Reload to update state and lockdown timers
+        loadProfileData();
       }
     });
 

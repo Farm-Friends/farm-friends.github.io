@@ -3,19 +3,16 @@
    ========================================================= */
 
 /* Global Settings */
-/* Global Settings */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #121212; /* Deep Black background */
-  color: #e0e0e0; /* Off-white text to reduce eye strain */
-  
-  /* NEW SIZING RULES */
-  max-width: 800px; /* Keeps the page from getting too wide on desktop */
-  margin: 0 auto; /* Centers the whole page on the screen */
+  background-color: #121212;
+  color: #e0e0e0;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 20px;
   line-height: 1.6;
 }
-/* Container for narrower pages (Login/Sign up/Suspended) */
+
 .narrow-container {
   max-width: 500px;
   margin: 0 auto;
@@ -23,7 +20,7 @@ body {
 
 /* Panels and Cards */
 .panel, .job-card, .user-card {
-  background-color: #1e1e1e; /* Dark gray for depth */
+  background-color: #1e1e1e;
   border: 1px solid #333;
   border-radius: 8px;
   padding: 20px;
@@ -38,13 +35,10 @@ h1, h2, h3, h4 {
   font-weight: 600;
 }
 
-/* =========================================================
-   HEADER & NAVIGATION
-   ========================================================= */
-/* Vertically offset the header and nav to reduce clutter */
+/* Header & Navigation */
 .header {
   display: flex;
-  flex-direction: column; /* Stacks items vertically */
+  flex-direction: column;
   align-items: center;
   text-align: center;
   margin-bottom: 30px;
@@ -54,11 +48,10 @@ h1, h2, h3, h4 {
 
 .header h2 {
   margin-top: 0;
-  margin-bottom: 15px; /* Creates the vertical offset from buttons */
-  color: #10b981; /* Emerald green title */
+  margin-bottom: 15px;
+  color: #10b981;
 }
 
-/* Container for the nav buttons */
 .header div {
   display: flex;
   flex-wrap: wrap;
@@ -66,15 +59,13 @@ h1, h2, h3, h4 {
   justify-content: center;
 }
 
-/* =========================================================
-   BUTTONS
-   ========================================================= */
+/* Buttons */
 button {
-  background-color: #10b981; /* Emerald Green */
+  background-color: #10b981;
   color: #ffffff;
   border: none;
   border-radius: 6px;
-  padding: 8px 16px; /* Reduced padding so they feel less massive */
+  padding: 8px 16px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -82,16 +73,15 @@ button {
 }
 
 button:hover {
-  background-color: #059669; /* Darker Emerald on hover */
+  background-color: #059669;
 }
 
 button:active {
   transform: scale(0.98);
 }
 
-/* Secondary Actions / Logout */
 .btn-logout {
-  background-color: #3f3f46 !important; /* Neutral gray */
+  background-color: #3f3f46 !important;
   color: #ffffff !important;
 }
 
@@ -99,7 +89,6 @@ button:active {
   background-color: #52525b !important;
 }
 
-/* Inline text buttons */
 .toggle-btn {
   background: none;
   color: #10b981;
@@ -118,33 +107,29 @@ button:active {
   color: #059669;
 }
 
-/* Destructive / Danger buttons (Overrides inline styles) */
 button[style*="#c9302c"], button.reject, button[onclick*="delete"] {
-  background-color: #ef4444 !important; /* Bright red */
+  background-color: #ef4444 !important;
 }
 button[style*="#c9302c"]:hover, button.reject:hover, button[onclick*="delete"]:hover {
   background-color: #dc2626 !important;
 }
 
-/* Warning buttons (Overrides inline styles) */
 button[style*="#8b5a2b"] {
-  background-color: #f59e0b !important; /* Amber */
+  background-color: #f59e0b !important;
   color: #121212 !important;
 }
 button[style*="#8b5a2b"]:hover {
   background-color: #d97706 !important;
 }
 
-/* =========================================================
-   FORMS & INPUTS
-   ========================================================= */
+/* Forms & Inputs */
 input[type="text"], input[type="email"], input[type="password"], 
 input[type="tel"], input[type="number"], input[type="date"], 
 select, textarea {
   width: 100%;
   padding: 10px;
   margin-bottom: 15px;
-  background-color: #2a2a2a; /* Slightly lighter than panels */
+  background-color: #2a2a2a;
   border: 1px solid #444;
   border-radius: 6px;
   color: #e0e0e0;
@@ -158,15 +143,12 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-/* Checkboxes */
 input[type="checkbox"] {
   width: auto;
   margin-right: 10px;
 }
 
-/* =========================================================
-   LAYOUT UTILITIES
-   ========================================================= */
+/* Layout Utilities */
 .hidden {
   display: none !important;
 }
@@ -184,15 +166,12 @@ input[type="checkbox"] {
   min-width: 130px;
 }
 
-/* Emergency job highlight */
 .job-card.emergency {
   border-left: 4px solid #ef4444;
   background-color: rgba(239, 68, 68, 0.05);
 }
 
-/* =========================================================
-   MOBILE RESPONSIVENESS
-   ========================================================= */
+/* Mobile Responsiveness */
 @media (max-width: 600px) {
   body {
     padding: 15px 10px;
@@ -208,9 +187,7 @@ input[type="checkbox"] {
   }
 }
 
-/* =========================================================
-   USER BADGES
-   ========================================================= */
+/* User Badges */
 .badge-container {
   display: inline-flex;
   flex-wrap: wrap;
@@ -230,7 +207,6 @@ input[type="checkbox"] {
   letter-spacing: 0.5px;
 }
 
-/* Specific Badge Colors */
 .badge-farmer {
   color: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.3);
@@ -251,17 +227,17 @@ input[type="checkbox"] {
   margin-top: 3rem;
   padding: 1.5rem 0;
   text-align: center;
-  border-top: 1px solid var(--border, #e2e8f0);
-  color: var(--text-muted, #64748b);
+  border-top: 1px solid #333;
+  color: #a1a1aa;
   font-size: 0.875rem;
 }
 
 .footer a {
-  color: var(--text-muted, #64748b);
+  color: #a1a1aa;
   text-decoration: underline;
   margin-left: 0.5rem;
 }
 
 .footer a:hover {
-  color: var(--primary, #2e7d32);
+  color: #10b981;
 }

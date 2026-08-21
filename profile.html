@@ -27,7 +27,7 @@
       </div>
 
       <div id="my-strikes" style="margin-top: 15px; font-weight: bold;">
-        <!-- Strikes will render here -->
+        <!-- Strikes render here -->
       </div>
     </div>
 
@@ -37,6 +37,9 @@
       <form id="profile-form">
         <label style="display:block; margin-bottom:5px; color:#a1a1aa;">Full Name</label>
         <input type="text" id="prof_name" required />
+        <p id="name-lock-notice" style="font-size: 12px; color: #f59e0b; margin-top: -5px; margin-bottom: 10px; display: none;">
+          ⚠️ Names can only be changed once every 14 days to preserve community trust.
+        </p>
         
         <label style="display:block; margin-bottom:5px; color:#a1a1aa; margin-top:10px;">Phone Number</label>
         <input type="tel" id="prof_phone" required />
@@ -56,6 +59,10 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUserId = null;
+    let originalName = "";
+    let lastNameChange = null;
+
+    const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -70,7 +77,7 @@
     async function loadProfileData() {
       const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('full_name, phone, zip_code, badges, strikes')
+        .select('full_name, phone, zip_code, badges, strikes, last_name_change')
         .eq('id', currentUserId)
         .single();
 
@@ -79,10 +86,24 @@
         return;
       }
 
-      // Populate Form
-      document.getElementById('prof_name').value = profile.full_name || '';
+      // Populate Form & Track Original Values
+      originalName = profile.full_name || '';
+      lastNameChange = profile.last_name_change ? new Date(profile.last_name_change).getTime() : null;
+
+      document.getElementById('prof_name').value = originalName;
       document.getElementById('prof_phone').value = profile.phone || '';
       document.getElementById('prof_zip').value = profile.zip_code || '';
+
+      // Check if name change is currently restricted
+      if (lastNameChange) {
+        const timePassed = Date.now() - lastNameChange;
+        if (timePassed < TWO_WEEKS_MS) {
+          const daysLeft = Math.ceil((TWO_WEEKS_MS - timePassed) / (1000 * 60 * 60 * 24));
+          const notice = document.getElementById('name-lock-notice');
+          notice.innerText = `🔒 You changed your name recently. Name edits locked for ${daysLeft} more day(s).`;
+          notice.style.display = 'block';
+        }
+      }
 
       // Render Badges
       const badgeContainer = document.getElementById('my-badges');
@@ -113,16 +134,41 @@
     // Handle Profile Update
     document.getElementById('profile-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const newName = document.getElementById('prof_name').value.trim();
+      const newPhone = document.getElementById('prof_phone').value.trim();
+      const newZip = document.getElementById('prof_zip').value.trim();
+
       const updates = {
-        full_name: document.getElementById('prof_name').value,
-        phone: document.getElementById('prof_phone').value,
-        zip_code: document.getElementById('prof_zip').value,
+        phone: newPhone,
+        zip_code: newZip
       };
+
+      // Handle Name Change Restriction Logic
+      if (newName !== originalName) {
+        if (lastNameChange) {
+          const timePassed = Date.now() - lastNameChange;
+          if (timePassed < TWO_WEEKS_MS) {
+            const daysLeft = Math.ceil((TWO_WEEKS_MS - timePassed) / (1000 * 60 * 60 * 24));
+            alert(`Name changes are restricted to once every 2 weeks to maintain accountability.\n\nPlease wait ${daysLeft} more day(s) before changing your name again.`);
+            document.getElementById('prof_name').value = originalName;
+            return;
+          }
+        }
+
+        // If allowed, append name and new timestamp
+        updates.full_name = newName;
+        updates.last_name_change = new Date().toISOString();
+      }
 
       const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUserId);
       
-      if (error) alert("Error updating profile: " + error.message);
-      else alert("Profile updated successfully!");
+      if (error) {
+        alert("Error updating profile: " + error.message);
+      } else {
+        alert("Profile updated successfully!");
+        loadProfileData(); // Reload to update state and lockdown timers
+      }
     });
 
     async function logout() {

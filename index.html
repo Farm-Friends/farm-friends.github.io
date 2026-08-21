@@ -3,15 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login | Rural Network</title>
+  <title>Farm Friends</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* 24 Frame @ 8FPS (3.0s total duration) Spinning 4-Leaf Clover Animation */
+    .farm-anim-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .clover-spin {
+      transform-origin: 50px 45px;
+      animation: cloverRotate 3s steps(24) infinite;
+    }
+
+    @keyframes cloverRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 <body style="background: #121212; color: #fff; font-family: sans-serif;">
 
   <main style="max-width: 420px; margin: 40px auto; padding: 20px;">
     <div class="panel" style="background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #333;">
-      <h2 style="margin-top: 0; color: #fff; text-align: center; font-size: 24px;">Rural Network</h2>
+      
+      <!-- 8FPS / 24-FRAME SPINNING 4-LEAF CLOVER SVG ANIMATION -->
+      <div class="farm-anim-container">
+        <svg width="90" height="90" viewBox="0 0 100 100" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <g class="clover-spin">
+            <!-- Top Leaf -->
+            <path d="M 50 45 C 36 30 40 10 50 16 C 60 10 64 30 50 45" />
+            <!-- Right Leaf -->
+            <path d="M 50 45 C 65 31 85 35 79 45 C 85 55 65 59 50 45" />
+            <!-- Bottom Leaf -->
+            <path d="M 50 45 C 64 60 60 80 50 74 C 40 80 36 60 50 45" />
+            <!-- Left Leaf -->
+            <path d="M 50 45 C 35 59 15 55 21 45 C 15 35 35 31 50 45" />
+           </g>
+        </svg>
+      </div>
+
+      <h2 style="margin-top: 0; color: #fff; text-align: center; font-size: 24px;">Farm Friends</h2>
       
       <!-- LOGIN FORM -->
       <form id="login-form" style="margin-top: 20px;">

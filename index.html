@@ -147,11 +147,24 @@
 
       if (error) {
         alert('Registration failed: ' + error.message);
-      } else {
+        return;
+      }
+
+      if (data.user) {
+        // Save profile explicitly with email and referral tracking
+        await supabaseClient.from('profiles').upsert({
+          id: data.user.id,
+          email: email,
+          full_name: fullName,
+          phone: phone,
+          zip_code: zipCode,
+          referrer_email: referrerEmail,
+          status: 'pending',
+          role: 'member'
+        });
+
         alert('Account created successfully!');
-        if (data.user) {
-          await routeUser(data.user.id);
-        }
+        await routeUser(data.user.id);
       }
     });
 

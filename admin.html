@@ -26,9 +26,17 @@
     <div id="active-users-list" style="display: flex; flex-direction: column; gap: 15px;">
       <p>Loading users...</p>
     </div>
+
+    <!-- PENDING GRIEVANCES SECTION -->
+    <div class="panel" style="margin-top: 40px; background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333;">
+      <h2 style="color: #ef4444; margin-top: 0;">Pending Grievances</h2>
+      <div id="grievance-list" style="display: flex; flex-direction: column; gap: 15px;">
+        <p style="color: #a1a1aa;">Loading grievances...</p>
+      </div>
+    </div>
   </main>
 
- <script>
+  <script>
     // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
@@ -61,8 +69,9 @@
         return;
       }
 
-      // 4. If they pass the check, load the admin data!
+      // 4. If they pass the check, load admin data!
       loadActiveUsers();
+      loadGrievances();
     }
 
     // --- USER DIRECTORY, STRIKES & BADGES ---
@@ -110,7 +119,7 @@
       }).join('');
     }
 
-    // --- NEW FUNCTION: AWARD BADGE ---
+    // --- AWARD BADGE ---
     async function awardBadge(userId, currentBadgesStr) {
       const currentBadges = JSON.parse(decodeURIComponent(currentBadgesStr));
       const newBadge = document.getElementById(`badge-select-${userId}`).value;
@@ -130,7 +139,7 @@
       }
     }
 
-    // --- EXISTING FUNCTIONS FOR MANAGEMENT ---
+    // --- USER MANAGEMENT ---
     async function addStrike(userId, currentStrikes) {
       if (!confirm("Are you sure you want to add a strike to this user?")) return;
       const { error } = await supabaseClient.from('profiles').update({ strikes: currentStrikes + 1 }).eq('id', userId);
@@ -143,6 +152,46 @@
       const { error } = await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', userId);
       if (error) alert("Error updating status: " + error.message);
       else loadActiveUsers();
+    }
+
+    // --- GRIEVANCE MANAGEMENT ---
+    async function loadGrievances() {
+      const container = document.getElementById('grievance-list');
+      const { data: grievances, error } = await supabaseClient
+        .from('grievances')
+        .select('*, profiles:reporter_id(full_name, phone)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        container.innerHTML = `<p style="color:#ef4444">Error loading grievances: ${error.message}</p>`;
+        return;
+      }
+
+      if (!grievances || grievances.length === 0) {
+        container.innerHTML = '<p style="color:#10b981;">No active grievances pending review.</p>';
+        return;
+      }
+
+      container.innerHTML = grievances.map(g => `
+        <div style="background: #2a2a2a; padding: 15px; border-radius: 6px; border-left: 4px solid #ef4444;">
+          <h4 style="margin: 0 0 5px 0; color: #fff;">${g.reason}</h4>
+          <p style="font-size: 13px; color: #a1a1aa; margin: 0 0 10px 0;">
+            Filed by: <strong>${g.profiles?.full_name || 'Unknown'}</strong> (${g.profiles?.phone || 'N/A'}) on ${new Date(g.created_at).toLocaleDateString()}
+          </p>
+          <p style="color: #ddd; white-space: pre-wrap; font-size: 14px; background: #1e1e1e; padding: 10px; border-radius: 4px;">${g.details}</p>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button onclick="resolveGrievance('${g.id}', 'resolved')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Mark Resolved</button>
+            <button onclick="resolveGrievance('${g.id}', 'dismissed')" style="background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Dismiss</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function resolveGrievance(id, status) {
+      const { error } = await supabaseClient.from('grievances').update({ status }).eq('id', id);
+      if (error) alert('Error updating status: ' + error.message);
+      else loadGrievances();
     }
   </script>
 </body>

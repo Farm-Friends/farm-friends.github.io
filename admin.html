@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Clean Table & Grid Alignment Styles */
     .admin-container {
       max-width: 1200px;
       margin: 0 auto;
+      padding: 20px 0;
     }
 
     .admin-table {
@@ -51,12 +51,12 @@
       background: #252525;
     }
 
-    /* Alignment Containers for Controls */
+    /* Alignment & Controls Layout */
     .action-group {
       display: flex;
       align-items: center;
       gap: 8px;
-      justify-content: flex-start;
+      justify-content: flex-end;
       flex-wrap: nowrap;
     }
 
@@ -75,12 +75,12 @@
       text-transform: capitalize;
     }
 
-    .status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+    .status-active, .status-resolved { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
     .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
-    .status-banned { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+    .status-banned, .status-dismissed { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
 
     .btn-sm {
-      padding: 6px 10px;
+      padding: 6px 12px;
       font-size: 12px;
       border-radius: 4px;
       border: none;
@@ -95,9 +95,10 @@
     .btn-strike { background: #f59e0b; color: #111; }
     .btn-ban { background: #ef4444; color: white; }
     .btn-add { background: #3b82f6; color: white; }
-    
+    .btn-dismiss { background: #52525b; color: white; }
+
     select.select-sm {
-      padding: 5px 8px;
+      padding: 6px 8px;
       font-size: 12px;
       background: #2a2a2a;
       color: #fff;
@@ -120,8 +121,8 @@
       </nav>
     </header>
 
-    <!-- USER MANAGEMENT PANEL -->
-    <div style="margin-bottom: 30px;">
+    <!-- SECTION 1: MEMBER REGISTRY -->
+    <div style="margin-bottom: 40px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <h3 style="margin: 0; color: #fff;">Member Registry</h3>
         <input type="text" id="user-search" placeholder="Filter by name or zip..." onkeyup="filterUsers()" style="padding: 8px 12px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 220px; font-size: 13px;">
@@ -131,17 +132,40 @@
         <table class="admin-table">
           <thead>
             <tr>
-              <th style="width: 20%;">Member</th>
-              <th style="width: 15%;">Contact &amp; Zip</th>
-              <th style="width: 12%;">Status</th>
+              <th style="width: 22%;">Member</th>
+              <th style="width: 18%;">Contact &amp; Travel</th>
+              <th style="width: 10%;">Status</th>
               <th style="width: 10%;">Strikes</th>
-              <th style="width: 23%;">Award Badge</th>
+              <th style="width: 20%;">Award Badge</th>
               <th style="width: 20%; text-align: right;">Moderation Actions</th>
             </tr>
           </thead>
           <tbody id="user-table-body">
             <tr>
               <td colspan="6" style="text-align: center; color: #a1a1aa; padding: 30px;">Loading member records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SECTION 2: GRIEVANCE REPORTS -->
+    <div style="margin-bottom: 40px;">
+      <h3 style="margin: 0 0 15px 0; color: #fff;">Grievance Reports</h3>
+      <div style="overflow-x: auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width: 18%;">Reporter</th>
+              <th style="width: 18%;">Reported Member</th>
+              <th style="width: 35%;">Reason &amp; Details</th>
+              <th style="width: 12%;">Status</th>
+              <th style="width: 17%; text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="grievance-table-body">
+            <tr>
+              <td colspan="5" style="text-align: center; color: #a1a1aa; padding: 30px;">Loading grievance reports...</td>
             </tr>
           </tbody>
         </table>
@@ -176,7 +200,8 @@
         return;
       }
 
-      fetchUsers();
+      await fetchUsers();
+      await fetchGrievances();
     });
 
     async function fetchUsers() {
@@ -221,7 +246,7 @@
             </td>
             <td>
               <div>📞 ${u.phone || 'N/A'}</div>
-              <div style="font-size: 12px; color: #a1a1aa; margin-top: 2px;">📍 ${u.zip_code || 'N/A'} (${u.max_distance || 25} mi)</div>
+              <div style="font-size: 12px; color: #a1a1aa; margin-top: 2px;">📍 Zip ${u.zip_code || 'N/A'} (${u.max_distance || 25} mi)</div>
             </td>
             <td>
               <span class="status-pill ${statusClass}">${u.status || 'pending'}</span>
@@ -241,7 +266,7 @@
               </div>
             </td>
             <td>
-              <div class="action-group" style="justify-content: flex-end;">
+              <div class="action-group">
                 ${u.status !== 'active' ? `<button onclick="setStatus('${u.id}', 'active')" class="btn-sm btn-approve">Approve</button>` : ''}
                 <button onclick="addStrike('${u.id}', ${u.strikes || 0})" class="btn-sm btn-strike">+1 Strike</button>
                 ${u.status !== 'banned' ? `<button onclick="setStatus('${u.id}', 'banned')" class="btn-sm btn-ban">Ban</button>` : ''}
@@ -250,6 +275,70 @@
           </tr>
         `;
       }).join('');
+    }
+
+    async function fetchGrievances() {
+      const { data: grievances, error } = await supabaseClient
+        .from('grievances')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const tbody = document.getElementById('grievance-table-body');
+
+      if (error) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444; padding: 20px;">Error loading grievances.</td></tr>';
+        return;
+      }
+
+      if (!grievances || !grievances.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #a1a1aa; padding: 20px;">No grievances reported.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = grievances.map(g => {
+        const reporter = allUsers.find(u => u.id === g.reporter_id);
+        const reported = allUsers.find(u => u.id === g.reported_user_id);
+
+        let statusClass = 'status-pending';
+        if (g.status === 'resolved') statusClass = 'status-resolved';
+        if (g.status === 'dismissed') statusClass = 'status-dismissed';
+
+        return `
+          <tr>
+            <td>
+              <strong style="color: #fff;">${reporter ? reporter.full_name : 'Unknown Member'}</strong>
+            </td>
+            <td>
+              <strong style="color: #ef4444;">${reported ? reported.full_name : 'N/A / Deleted User'}</strong>
+            </td>
+            <td>
+              <div style="font-weight: bold; color: #f59e0b; margin-bottom: 4px;">Reason: ${g.reason}</div>
+              <div style="color: #ccc; font-size: 13px; line-height: 1.4;">${g.details}</div>
+            </td>
+            <td>
+              <span class="status-pill ${statusClass}">${g.status || 'pending'}</span>
+            </td>
+            <td>
+              <div class="action-group">
+                ${g.status === 'pending' ? `
+                  <button onclick="updateGrievanceStatus('${g.id}', 'resolved')" class="btn-sm btn-approve">Resolve</button>
+                  <button onclick="updateGrievanceStatus('${g.id}', 'dismissed')" class="btn-sm btn-dismiss">Dismiss</button>
+                ` : `<span style="font-size: 12px; color: #a1a1aa;">Completed</span>`}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function updateGrievanceStatus(id, status) {
+      const { error } = await supabaseClient
+        .from('grievances')
+        .update({ status })
+        .eq('id', id);
+
+      if (error) alert('Error updating grievance: ' + error.message);
+      else fetchGrievances();
     }
 
     function filterUsers() {
@@ -275,7 +364,6 @@
       const newStrikes = currentStrikes + 1;
       const updates = { strikes: newStrikes };
       
-      // Auto-ban on 3 strikes
       if (newStrikes >= 3) {
         updates.status = 'banned';
         alert('Member reached 3 strikes and has been automatically banned.');

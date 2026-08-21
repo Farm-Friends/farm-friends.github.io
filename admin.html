@@ -5,55 +5,165 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Rural Network</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* Clean Table & Grid Alignment Styles */
+    .admin-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: #1e1e1e;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #333;
+    }
+
+    .admin-table th {
+      background: #2a2a2a;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+
+    .admin-table td {
+      padding: 14px 16px;
+      color: #e4e4e7;
+      font-size: 14px;
+      border-bottom: 1px solid #2a2a2a;
+      vertical-align: middle;
+    }
+
+    .admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .admin-table tr:hover {
+      background: #252525;
+    }
+
+    /* Alignment Containers for Controls */
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+    }
+
+    .badge-select-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: capitalize;
+    }
+
+    .status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+    .status-banned { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-sm:hover { opacity: 0.85; }
+    .btn-approve { background: #10b981; color: white; }
+    .btn-strike { background: #f59e0b; color: #111; }
+    .btn-ban { background: #ef4444; color: white; }
+    .btn-add { background: #3b82f6; color: white; }
+    
+    select.select-sm {
+      padding: 5px 8px;
+      font-size: 12px;
+      background: #2a2a2a;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-  <header style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
-    <h1>Admin Dashboard</h1>
-    <nav>
-      <a href="jobs.html" style="color: #3b82f6; text-decoration: none; margin-right: 15px;">&larr; Back to Job Board</a>
-    </nav>
-  </header>
 
-  <main>
-    <h2>User Directory & Management</h2>
-    
-    <div style="margin-bottom: 20px;">
-      <input type="text" id="search_user" placeholder="Search by name or phone..." style="width: 100%; max-width: 400px; padding: 10px; border-radius: 4px; border: 1px solid #333; background: #1e1e1e; color: #fff;" onkeyup="loadActiveUsers()">
-    </div>
+  <div class="admin-container">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #333;">
+      <div>
+        <h1 style="margin: 0;">Admin Command Center</h1>
+        <p style="margin: 5px 0 0 0; color: #a1a1aa; font-size: 14px;">Member Management &amp; Moderation</p>
+      </div>
+      <nav style="display: flex; align-items: center; gap: 15px;">
+        <a href="jobs.html" style="color: #3b82f6; text-decoration: none; font-size: 14px;">&larr; Back to Job Board</a>
+        <button onclick="logout()" class="btn-sm" style="background: #333; color: #aaa;">Log Out</button>
+      </nav>
+    </header>
 
-    <div id="active-users-list" style="display: flex; flex-direction: column; gap: 15px;">
-      <p>Loading users...</p>
-    </div>
+    <!-- USER MANAGEMENT PANEL -->
+    <div style="margin-bottom: 30px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin: 0; color: #fff;">Member Registry</h3>
+        <input type="text" id="user-search" placeholder="Filter by name or zip..." onkeyup="filterUsers()" style="padding: 8px 12px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 220px; font-size: 13px;">
+      </div>
 
-    <!-- PENDING GRIEVANCES SECTION -->
-    <div class="panel" style="margin-top: 40px; background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333;">
-      <h2 style="color: #ef4444; margin-top: 0;">Pending Grievances</h2>
-      <div id="grievance-list" style="display: flex; flex-direction: column; gap: 15px;">
-        <p style="color: #a1a1aa;">Loading grievances...</p>
+      <div style="overflow-x: auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width: 20%;">Member</th>
+              <th style="width: 15%;">Contact &amp; Zip</th>
+              <th style="width: 12%;">Status</th>
+              <th style="width: 10%;">Strikes</th>
+              <th style="width: 23%;">Award Badge</th>
+              <th style="width: 20%; text-align: right;">Moderation Actions</th>
+            </tr>
+          </thead>
+          <tbody id="user-table-body">
+            <tr>
+              <td colspan="6" style="text-align: center; color: #a1a1aa; padding: 30px;">Loading member records...</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-  </main>
+  </div>
 
   <script>
-    // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Run security check on page load
-    document.addEventListener('DOMContentLoaded', checkAdminAccess);
+    let allUsers = [];
 
-    // --- SECURITY CHECK ---
-    async function checkAdminAccess() {
+    document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      
       if (!session) {
         window.location.href = 'index.html';
         return;
       }
 
+      // Verify Admin Role
       const { data: profile, error } = await supabaseClient
         .from('profiles')
         .select('role')
@@ -61,200 +171,149 @@
         .single();
 
       if (error || !profile || profile.role !== 'admin') {
-        alert("Access Denied: You do not have administrator privileges.");
+        alert('Unauthorized access. Admin privileges required.');
         window.location.href = 'jobs.html';
         return;
       }
 
-      loadActiveUsers();
-      loadGrievances();
+      fetchUsers();
+    });
+
+    async function fetchUsers() {
+      const { data: users, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        alert('Error fetching users: ' + error.message);
+        return;
+      }
+
+      allUsers = users || [];
+      renderUserTable(allUsers);
     }
 
-    // --- USER DIRECTORY, STRIKES & STATUS MANAGEMENT ---
-    async function loadActiveUsers() {
-      const searchTerm = document.getElementById('search_user').value.toLowerCase();
+    function renderUserTable(users) {
+      const tbody = document.getElementById('user-table-body');
       
-      // Fetch all users so admins can manage active, pending/under review, and banned profiles
-      const { data: users, error } = await supabaseClient.from('profiles').select('*').order('created_at', { ascending: false });
-      const container = document.getElementById('active-users-list');
-      
-      if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
-      
-      const filteredUsers = users.filter(u => 
-        (u.full_name && u.full_name.toLowerCase().includes(searchTerm)) || 
-        (u.phone && u.phone.includes(searchTerm))
-      );
+      if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #a1a1aa; padding: 20px;">No members found.</td></tr>';
+        return;
+      }
 
-      if (!filteredUsers.length) { container.innerHTML = '<p>No users found matching your search.</p>'; return; }
+      tbody.innerHTML = users.map(u => {
+        const badges = u.badges || [];
+        const badgeListHtml = badges.length 
+          ? `<div style="margin-top:4px;">${badges.map(b => `<span class="badge badge-community" style="font-size:10px; padding:2px 6px; margin-right:3px;">${b}</span>`).join('')}</div>`
+          : '';
 
-      container.innerHTML = filteredUsers.map(u => {
-        const userBadges = u.badges || [];
-        const badgeDisplay = userBadges.map(b => `<span class="badge badge-community">${b}</span>`).join('');
-        
-        let statusBadgeColor = '#10b981'; // active
-        let statusText = 'ACTIVE';
-        if (u.status === 'pending') { statusBadgeColor = '#f59e0b'; statusText = 'UNDER REVIEW'; }
-        if (u.status === 'banned') { statusBadgeColor = '#ef4444'; statusText = 'BANNED'; }
+        let statusClass = 'status-pending';
+        if (u.status === 'active') statusClass = 'status-active';
+        if (u.status === 'banned') statusClass = 'status-banned';
 
         return `
-          <div class="user-card" style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333;">
-            <h3 style="margin-top:0; display: flex; align-items: center; gap: 10px;">
-              ${u.full_name} 
-              <span style="background: ${statusBadgeColor}; color: #121212; font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${statusText}</span>
-              <span style="color: #ef4444; font-size: 14px;">(Strikes: ${u.strikes || 0})</span>
-            </h3>
-            <div class="badge-container" style="margin-left: 0; margin-bottom: 10px;">${badgeDisplay}</div>
-            <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
-            
-            <div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <select id="badge-select-${u.id}" style="width: auto; padding: 6px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;">
-                <option value="🚜 Verified Farmer">🚜 Verified Farmer</option>
-                <option value="🛠️ Trusted Hand">🛠️ Trusted Hand</option>
-                <option value="🤝 Community Vetted">🤝 Community Vetted</option>
-              </select>
-              <button onclick="awardBadge('${u.id}', '${encodeURIComponent(JSON.stringify(userBadges))}')" style="background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 6px 10px;">Give Badge</button>
-              
-              <button onclick="addStrike('${u.id}', ${u.strikes || 0})" style="background: #f59e0b; color: #121212; border: none; border-radius: 4px; cursor: pointer; padding: 6px 10px; font-weight: bold;">+1 Strike</button>
-              <button onclick="resetStrikes('${u.id}')" style="background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 6px 10px;">Reset Strikes (0)</button>
-              
-              <select id="status-select-${u.id}" onchange="updateStatus('${u.id}', this.value)" style="width: auto; padding: 6px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;">
-                <option value="active" ${u.status === 'active' ? 'selected' : ''}>Active</option>
-                <option value="pending" ${u.status === 'pending' ? 'selected' : ''}>Under Review (Pending)</option>
-                <option value="banned" ${u.status === 'banned' ? 'selected' : ''}>Banned</option>
-              </select>
-            </div>
-          </div>
+          <tr>
+            <td>
+              <strong style="color: #fff; font-size: 15px;">${u.full_name || 'Unnamed User'}</strong>
+              <div style="font-size: 11px; color: #a1a1aa; margin-top: 2px;">Role: ${u.role || 'member'}</div>
+              ${badgeListHtml}
+            </td>
+            <td>
+              <div>📞 ${u.phone || 'N/A'}</div>
+              <div style="font-size: 12px; color: #a1a1aa; margin-top: 2px;">📍 ${u.zip_code || 'N/A'} (${u.max_distance || 25} mi)</div>
+            </td>
+            <td>
+              <span class="status-pill ${statusClass}">${u.status || 'pending'}</span>
+            </td>
+            <td>
+              <strong style="color: ${u.strikes > 0 ? '#ef4444' : '#10b981'};">${u.strikes || 0}</strong> / 3
+            </td>
+            <td>
+              <div class="badge-select-group">
+                <select id="badge-select-${u.id}" class="select-sm">
+                  <option value="Verified Farm">Verified Farm</option>
+                  <option value="Trusted Hand">Trusted Hand</option>
+                  <option value="Community Pillar">Community Pillar</option>
+                  <option value="Equipment Operator">Equipment Operator</option>
+                </select>
+                <button onclick="awardBadge('${u.id}')" class="btn-sm btn-add">+ Add</button>
+              </div>
+            </td>
+            <td>
+              <div class="action-group" style="justify-content: flex-end;">
+                ${u.status !== 'active' ? `<button onclick="setStatus('${u.id}', 'active')" class="btn-sm btn-approve">Approve</button>` : ''}
+                <button onclick="addStrike('${u.id}', ${u.strikes || 0})" class="btn-sm btn-strike">+1 Strike</button>
+                ${u.status !== 'banned' ? `<button onclick="setStatus('${u.id}', 'banned')" class="btn-sm btn-ban">Ban</button>` : ''}
+              </div>
+            </td>
+          </tr>
         `;
       }).join('');
     }
 
-    // --- AWARD BADGE ---
-    async function awardBadge(userId, currentBadgesStr) {
-      const currentBadges = JSON.parse(decodeURIComponent(currentBadgesStr));
-      const newBadge = document.getElementById(`badge-select-${userId}`).value;
-      
-      if (currentBadges.includes(newBadge)) {
-        alert("User already has this badge!");
-        return;
-      }
-      
-      const updatedBadges = [...currentBadges, newBadge];
-      
-      const { error } = await supabaseClient.from('profiles').update({ badges: updatedBadges }).eq('id', userId);
-      if (error) alert("Error saving badge: " + error.message);
-      else loadActiveUsers();
+    function filterUsers() {
+      const query = document.getElementById('user-search').value.toLowerCase();
+      const filtered = allUsers.filter(u => 
+        (u.full_name && u.full_name.toLowerCase().includes(query)) ||
+        (u.zip_code && u.zip_code.toLowerCase().includes(query))
+      );
+      renderUserTable(filtered);
     }
 
-    // --- AUTOMATIC 3-STRIKE REVIEW & STRIKE MANAGEMENT ---
-    async function addStrike(userId, currentStrikes) {
-      if (!confirm("Are you sure you want to add a strike to this user?")) return;
-      
-      const newStrikes = currentStrikes + 1;
-      const updateData = { strikes: newStrikes };
-
-      // Automatically send account under review if strikes reach 3 or more
-      if (newStrikes >= 3) {
-        updateData.status = 'pending';
-        alert(`User reached ${newStrikes} strikes! Their account has been placed Under Review (Pending status) and blocked from the job board.`);
-      }
-
-      const { error } = await supabaseClient.from('profiles').update(updateData).eq('id', userId);
-      if (error) alert("Error adding strike: " + error.message);
-      else loadActiveUsers();
-    }
-
-    async function resetStrikes(userId) {
-      if (!confirm("Reset strikes to 0 for this user?")) return;
-      const { error } = await supabaseClient.from('profiles').update({ strikes: 0 }).eq('id', userId);
-      if (error) alert("Error resetting strikes: " + error.message);
-      else loadActiveUsers();
-    }
-
-    async function updateStatus(userId, newStatus) {
-      if (!confirm(`Change user status to '${newStatus}'?`)) return;
-      const { error } = await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', userId);
-      if (error) alert("Error updating status: " + error.message);
-      else loadActiveUsers();
-    }
-
-    // --- GRIEVANCE MANAGEMENT ---
-    async function loadGrievances() {
-      const container = document.getElementById('grievance-list');
-      const { data: grievances, error } = await supabaseClient
-        .from('grievances')
-        .select('*, profiles:reporter_id(full_name, phone)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        container.innerHTML = `<p style="color:#ef4444">Error loading grievances: ${error.message}</p>`;
-        return;
-      }
-
-      if (!grievances || grievances.length === 0) {
-        container.innerHTML = '<p style="color:#10b981;">No active grievances pending review.</p>';
-        return;
-      }
-
-      container.innerHTML = grievances.map(g => `
-        <div style="background: #2a2a2a; padding: 15px; border-radius: 6px; border-left: 4px solid #ef4444;">
-          <h4 style="margin: 0 0 5px 0; color: #fff;">${g.reason}</h4>
-          <p style="font-size: 13px; color: #a1a1aa; margin: 0 0 10px 0;">
-            Filed by: <strong>${g.profiles?.full_name || 'Unknown'}</strong> (${g.profiles?.phone || 'N/A'}) on ${new Date(g.created_at).toLocaleDateString()}
-          </p>
-          <p style="color: #ddd; white-space: pre-wrap; font-size: 14px; background: #1e1e1e; padding: 10px; border-radius: 4px;">${g.details}</p>
-          
-          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; border-top: 1px solid #333; padding-top: 10px;">
-            <button onclick="resolveGrievance('${g.id}', 'resolved')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Mark Resolved</button>
-            <button onclick="actionAndResolveGrievance('${g.id}', 'strike')" style="background: #f59e0b; color: #121212; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">+1 Strike Offender & Resolve</button>
-            <button onclick="actionAndResolveGrievance('${g.id}', 'ban')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Ban Offender & Resolve</button>
-            <button onclick="resolveGrievance('${g.id}', 'dismissed')" style="background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Dismiss</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function resolveGrievance(id, status) {
-      const { error } = await supabaseClient.from('grievances').update({ status }).eq('id', id);
-      if (error) alert('Error updating status: ' + error.message);
-      else loadGrievances();
-    }
-
-    async function actionAndResolveGrievance(grievanceId, actionType) {
-      const searchTerm = prompt(`Enter the reported user's EXACT phone number or name to apply this ${actionType}:`);
-      if (!searchTerm) return;
-
-      const { data: users, error: searchError } = await supabaseClient
+    async function setStatus(userId, status) {
+      const { error } = await supabaseClient
         .from('profiles')
-        .select('id, full_name, strikes')
-        .or(`phone.eq.${searchTerm},full_name.ilike.%${searchTerm}%`);
+        .update({ status })
+        .eq('id', userId);
 
-      if (searchError || !users || users.length === 0) {
-        alert("Could not locate a user matching that phone number or name. Action canceled.");
+      if (error) alert('Error updating status: ' + error.message);
+      else fetchUsers();
+    }
+
+    async function addStrike(userId, currentStrikes) {
+      const newStrikes = currentStrikes + 1;
+      const updates = { strikes: newStrikes };
+      
+      // Auto-ban on 3 strikes
+      if (newStrikes >= 3) {
+        updates.status = 'banned';
+        alert('Member reached 3 strikes and has been automatically banned.');
+      }
+
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId);
+
+      if (error) alert('Error issuing strike: ' + error.message);
+      else fetchUsers();
+    }
+
+    async function awardBadge(userId) {
+      const selectedBadge = document.getElementById(`badge-select-${userId}`).value;
+      const user = allUsers.find(u => u.id === userId);
+      const currentBadges = user.badges || [];
+
+      if (currentBadges.includes(selectedBadge)) {
+        alert('Member already has this badge.');
         return;
       }
 
-      const targetUser = users[0];
+      const updatedBadges = [...currentBadges, selectedBadge];
 
-      if (actionType === 'strike') {
-        const newStrikes = (targetUser.strikes || 0) + 1;
-        const updateData = { strikes: newStrikes };
-        
-        if (newStrikes >= 3) {
-          updateData.status = 'pending';
-          alert(`Added 1 strike to ${targetUser.full_name}. Total strikes: ${newStrikes}. User automatically placed Under Review.`);
-        } else {
-          alert(`Added 1 strike to ${targetUser.full_name}. Total strikes: ${newStrikes}`);
-        }
-        
-        await supabaseClient.from('profiles').update(updateData).eq('id', targetUser.id);
-      } else if (actionType === 'ban') {
-        await supabaseClient.from('profiles').update({ status: 'banned' }).eq('id', targetUser.id);
-        alert(`${targetUser.full_name} has been banned.`);
-      }
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ badges: updatedBadges })
+        .eq('id', userId);
 
-      await resolveGrievance(grievanceId, 'resolved');
-      loadActiveUsers();
+      if (error) alert('Error awarding badge: ' + error.message);
+      else fetchUsers();
+    }
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
     }
   </script>
 </body>

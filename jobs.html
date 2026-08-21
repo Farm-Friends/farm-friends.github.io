@@ -5,20 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Job Board | Rural Network</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
     <h1>Local Job Board</h1>
     <nav>
-      <!-- Update these links based on your actual file names -->
-      <a href="post-job.html" style="background: #3b82f6; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold;">+ Post a Job</a>
-      <a href="admin.html" style="color: #a1a1aa; text-decoration: none; margin-left: 15px;">Admin</a>
+      <a href="profile.html" style="color: #10b981; text-decoration: none; margin-right: 15px; font-weight: bold;">My Profile</a>
+      <a href="admin.html" style="color: #a1a1aa; text-decoration: none;">Admin</a>
     </nav>
   </header>
 
   <main>
+    <!-- JOB POST FORM -->
+    <div class="panel" style="margin-bottom: 20px;">
+      <h3 style="margin-top:0;">Submit a Job Request</h3>
+      <form id="job-form">
+        <input type="text" id="title" placeholder="Job Title (e.g., Hay Baling)" required />
+        <select id="work_type" required>
+          <option value="Fencing">Fencing</option>
+          <option value="Livestock">Livestock</option>
+          <option value="Harvest">Harvest</option>
+          <option value="General">General Maintenance</option>
+        </select>
+        <textarea id="description" placeholder="Work details..." required></textarea>
+        <div class="filter-row" style="display: flex; gap: 10px;">
+          <input type="number" id="hours_min" placeholder="Min Hours" required style="flex: 1;"/>
+          <input type="number" id="hours_max" placeholder="Max Hours" required style="flex: 1;"/>
+        </div>
+        <div class="filter-row" style="display: flex; gap: 10px;">
+          <input type="text" id="zip_code" placeholder="Zip Code" required style="flex: 1;"/>
+          <input type="tel" id="contact_phone" placeholder="Contact Phone Number" required style="flex: 1;"/>
+        </div>
+        <input type="date" id="date_needed" required />
+        <label style="display:block; margin-bottom:15px; cursor: pointer;"><input type="checkbox" id="is_emergency" style="display:inline; width:auto;"> Emergency / Short-Notice Job</label>
+        <button type="submit">Post Job</button>
+      </form>
+    </div>
+
     <!-- Filters -->
     <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
       <div>
@@ -45,14 +69,13 @@
   </main>
 
   <script>
-    // Initialize Supabase (Replace with your actual initialization if using a separate config file)
-    // const supabaseUrl = 'YOUR_SUPABASE_URL';
-    // const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-    // const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    // Initialize Supabase
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let currentUserId = null;
 
-    // Run when page loads to get user session and then fetch jobs
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
@@ -61,11 +84,28 @@
       fetchJobs();
     });
 
+    // Handle Job Submission
+    document.getElementById('job-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { error } = await supabaseClient.from('jobs').insert([{
+        poster_id: currentUserId, title: document.getElementById('title').value,
+        work_type: document.getElementById('work_type').value, description: document.getElementById('description').value,
+        hours_min: document.getElementById('hours_min').value, hours_max: document.getElementById('hours_max').value,
+        zip_code: document.getElementById('zip_code').value, contact_phone: document.getElementById('contact_phone').value,
+        date_needed: document.getElementById('date_needed').value, is_emergency: document.getElementById('is_emergency').checked
+      }]);
+      if (error) alert('Error posting job: ' + error.message);
+      else { 
+        document.getElementById('job-form').reset(); 
+        fetchJobs(); 
+        alert('Job posted successfully!');
+      }
+    });
+
     async function fetchJobs() {
       const typeFilter = document.getElementById('filter_type').value;
       const zipFilter = document.getElementById('filter_zip').value;
       
-      // Use a join query to grab the poster's profile data simultaneously
       let query = supabaseClient.from('jobs').select('*, profiles(full_name, badges)').eq('status', 'open');
       if (typeFilter) query = query.eq('work_type', typeFilter);
       if (zipFilter) query = query.eq('zip_code', zipFilter);
@@ -83,7 +123,6 @@
         const posterName = j.profiles?.full_name || 'Network Member';
         const badges = j.profiles?.badges || [];
         
-        // Render badges based on text content to apply the correct color class
         const badgeDisplay = badges.map(b => {
           let badgeClass = 'badge-community';
           if (b.includes('Farmer')) badgeClass = 'badge-farmer';
@@ -101,7 +140,6 @@
           `;
         }
 
-        // Inline border color for emergency jobs, assuming standard card styling is in style.css
         const emergencyBorder = j.is_emergency ? 'border: 1px solid #ef4444;' : 'border: 1px solid #333;';
 
         return `
@@ -121,7 +159,6 @@
       }).join('');
     }
 
-    // --- JOB MANAGEMENT FUNCTIONS ---
     async function markJobFilled(jobId) {
       if (!confirm("Are you sure you want to mark this job as filled? It will be removed from the public board.")) return;
       const { error } = await supabaseClient.from('jobs').update({ status: 'filled' }).eq('id', jobId);

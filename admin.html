@@ -29,10 +29,10 @@
   </main>
 
   <script>
-    // Initialize Supabase (Replace with your actual initialization if using a separate config file)
-    // const supabaseUrl = 'YOUR_SUPABASE_URL';
-    // const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-    // const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+    // Initialize Supabase
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Load active users on page load
     document.addEventListener('DOMContentLoaded', loadActiveUsers);
@@ -98,7 +98,7 @@
       if (error) {
         alert("Error saving badge: " + error.message);
       } else {
-        loadActiveUsers(); // Refresh the list to show the new badge
+        loadActiveUsers(); 
       }
     }
 

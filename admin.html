@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Expanded Layout Container */
+    /* Ultra-Wide Layout without Scrollbars */
     .admin-container {
-      width: 95%;
-      max-width: 1600px;
+      width: 98%;
+      max-width: 1800px;
       margin: 0 auto;
       padding: 20px 0;
     }
@@ -21,28 +21,33 @@
       border-spacing: 0;
       background: #1e1e1e;
       border-radius: 8px;
-      overflow: hidden;
       border: 1px solid #333;
     }
 
     .admin-table th {
       background: #2a2a2a;
       color: #a1a1aa;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 12px 14px;
+      padding: 10px 12px;
       text-align: left;
       border-bottom: 1px solid #333;
+      white-space: nowrap;
     }
 
     .admin-table td {
-      padding: 12px 14px;
+      padding: 10px 12px;
       color: #e4e4e7;
-      font-size: 14px;
+      font-size: 13px;
       border-bottom: 1px solid #2a2a2a;
       vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .admin-table td.details-cell {
+      white-space: normal;
     }
 
     .admin-table tr:last-child td {
@@ -53,26 +58,25 @@
       background: #252525;
     }
 
-    /* Alignment & Controls Layout */
+    /* Tight Controls Layout */
     .action-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       justify-content: flex-start;
-      flex-wrap: nowrap;
     }
 
     .badge-select-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .status-pill {
       display: inline-block;
-      padding: 4px 10px;
+      padding: 3px 8px;
       border-radius: 12px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       text-transform: capitalize;
     }
@@ -82,8 +86,8 @@
     .status-banned, .status-dismissed { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
 
     .btn-sm {
-      padding: 6px 12px;
-      font-size: 12px;
+      padding: 5px 9px;
+      font-size: 11px;
       border-radius: 4px;
       border: none;
       cursor: pointer;
@@ -100,13 +104,13 @@
     .btn-dismiss { background: #52525b; color: white; }
 
     select.select-sm {
-      padding: 6px 10px;
-      font-size: 13px;
+      padding: 4px 6px;
+      font-size: 12px;
       background: #2a2a2a;
       color: #fff;
       border: 1px solid #444;
       border-radius: 4px;
-      min-width: 170px; /* Prevents option text truncation */
+      width: 150px;
     }
   </style>
 </head>
@@ -115,64 +119,60 @@
   <div class="admin-container">
     <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #333;">
       <div>
-        <h1 style="margin: 0;">Admin Command Center</h1>
-        <p style="margin: 5px 0 0 0; color: #a1a1aa; font-size: 14px;">Member Management &amp; Moderation</p>
+        <h1 style="margin: 0; font-size: 24px;">Admin Command Center</h1>
+        <p style="margin: 4px 0 0 0; color: #a1a1aa; font-size: 13px;">Member Management &amp; Moderation</p>
       </div>
-      <nav style="display: flex; align-items: center; gap: 15px;">
-        <a href="jobs.html" style="color: #3b82f6; text-decoration: none; font-size: 14px;">&larr; Back to Job Board</a>
+      <nav style="display: flex; align-items: center; gap: 12px;">
+        <a href="jobs.html" style="color: #3b82f6; text-decoration: none; font-size: 13px;">&larr; Back to Job Board</a>
         <button onclick="logout()" class="btn-sm" style="background: #333; color: #aaa;">Log Out</button>
       </nav>
     </header>
 
     <!-- SECTION 1: MEMBER REGISTRY -->
-    <div style="margin-bottom: 40px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <div style="margin-bottom: 35px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h3 style="margin: 0; color: #fff;">Member Registry</h3>
-        <input type="text" id="user-search" placeholder="Filter by name or zip..." onkeyup="filterUsers()" style="padding: 8px 12px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 240px; font-size: 13px;">
+        <input type="text" id="user-search" placeholder="Filter by name or zip..." onkeyup="filterUsers()" style="padding: 6px 10px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 220px; font-size: 12px;">
       </div>
 
-      <div style="overflow-x: auto;">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th style="width: 20%;">Member</th>
-              <th style="width: 16%;">Contact &amp; Travel</th>
-              <th style="width: 9%;">Status</th>
-              <th style="width: 8%;">Strikes</th>
-              <th style="width: 25%;">Award Badge</th>
-              <th style="width: 22%;">Moderation Actions</th>
-            </tr>
-          </thead>
-          <tbody id="user-table-body">
-            <tr>
-              <td colspan="6" style="text-align: center; color: #a1a1aa; padding: 30px;">Loading member records...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th style="width: 18%;">Member</th>
+            <th style="width: 16%;">Contact &amp; Travel</th>
+            <th style="width: 8%;">Status</th>
+            <th style="width: 8%;">Strikes</th>
+            <th style="width: 24%;">Award Badge</th>
+            <th style="width: 26%;">Moderation Actions</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body">
+          <tr>
+            <td colspan="6" style="text-align: center; color: #a1a1aa; padding: 25px;">Loading member records...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- SECTION 2: GRIEVANCE REPORTS -->
-    <div style="margin-bottom: 40px;">
-      <h3 style="margin: 0 0 15px 0; color: #fff;">Grievance Reports</h3>
-      <div style="overflow-x: auto;">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th style="width: 18%;">Reporter</th>
-              <th style="width: 18%;">Reported Member</th>
-              <th style="width: 38%;">Reason &amp; Details</th>
-              <th style="width: 10%;">Status</th>
-              <th style="width: 16%;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="grievance-table-body">
-            <tr>
-              <td colspan="5" style="text-align: center; color: #a1a1aa; padding: 30px;">Loading grievance reports...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div style="margin-bottom: 35px;">
+      <h3 style="margin: 0 0 12px 0; color: #fff;">Grievance Reports</h3>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th style="width: 15%;">Reporter</th>
+            <th style="width: 15%;">Reported Member</th>
+            <th style="width: 50%;">Reason &amp; Details</th>
+            <th style="width: 8%;">Status</th>
+            <th style="width: 12%;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="grievance-table-body">
+          <tr>
+            <td colspan="5" style="text-align: center; color: #a1a1aa; padding: 25px;">Loading grievance reports...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -190,7 +190,6 @@
         return;
       }
 
-      // Verify Admin Role
       const { data: profile, error } = await supabaseClient
         .from('profiles')
         .select('role')
@@ -233,12 +232,7 @@
       tbody.innerHTML = users.map(u => {
         const badges = u.badges || [];
         const badgeListHtml = badges.length 
-          ? `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">${badges.map(b => {
-              let badgeClass = 'badge-community';
-              if (b.includes('Farm')) badgeClass = 'badge-farmer';
-              if (b.includes('Hand')) badgeClass = 'badge-worker';
-              return `<span class="badge ${badgeClass}" style="font-size:10px; padding:2px 6px;">${b}</span>`;
-            }).join('')}</div>`
+          ? `<div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:3px;">${badges.map(b => `<span class="badge badge-community" style="font-size:9px; padding:2px 5px;">${b}</span>`).join('')}</div>`
           : '';
 
         let statusClass = 'status-pending';
@@ -248,13 +242,13 @@
         return `
           <tr>
             <td>
-              <strong style="color: #fff; font-size: 15px;">${u.full_name || 'Unnamed User'}</strong>
+              <strong style="color: #fff; font-size: 14px;">${u.full_name || 'Unnamed User'}</strong>
               <div style="font-size: 11px; color: #a1a1aa; margin-top: 2px;">Role: ${u.role || 'member'}</div>
               ${badgeListHtml}
             </td>
             <td>
               <div>📞 ${u.phone || 'N/A'}</div>
-              <div style="font-size: 12px; color: #a1a1aa; margin-top: 2px;">📍 Zip ${u.zip_code || 'N/A'} (${u.max_distance || 25} mi)</div>
+              <div style="font-size: 11px; color: #a1a1aa; margin-top: 2px;">📍 Zip ${u.zip_code || 'N/A'} (${u.max_distance || 25} mi)</div>
             </td>
             <td>
               <span class="status-pill ${statusClass}">${u.status || 'pending'}</span>
@@ -319,9 +313,9 @@
             <td>
               <strong style="color: #ef4444;">${reported ? reported.full_name : 'N/A / Deleted User'}</strong>
             </td>
-            <td>
-              <div style="font-weight: bold; color: #f59e0b; margin-bottom: 4px;">Reason: ${g.reason}</div>
-              <div style="color: #ccc; font-size: 13px; line-height: 1.4;">${g.details}</div>
+            <td class="details-cell">
+              <div style="font-weight: bold; color: #f59e0b; margin-bottom: 3px;">Reason: ${g.reason}</div>
+              <div style="color: #ccc; font-size: 12px; line-height: 1.3;">${g.details}</div>
             </td>
             <td>
               <span class="status-pill ${statusClass}">${g.status || 'pending'}</span>

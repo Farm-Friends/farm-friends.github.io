@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Rural Network</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,22 +14,22 @@
   </div>
 
   <!-- PENDING USERS SECTION -->
-  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px;">Pending Applications</h2>
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px;">Pending Applications</h2>
   <div id="pending-list">Loading pending applications...</div>
 
   <!-- GRIEVANCES SECTION -->
-  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px; color: #c9302c;">Pending Grievance Reports</h2>
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 40px; color: #ef4444;">Pending Grievance Reports</h2>
   <div id="reports-list">Loading reports...</div>
 
   <!-- USER DIRECTORY (STRIKE SYSTEM) -->
-  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px;">Active User Directory</h2>
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 40px;">Active User Directory</h2>
   <div class="panel" style="padding: 15px;">
     <input type="text" id="search_user" placeholder="Search users by name or phone..." onkeyup="loadActiveUsers()" style="margin: 0;"/>
   </div>
   <div id="active-users-list">Loading users...</div>
 
   <!-- JOB MODERATION SECTION -->
-  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px;">Manage Active Jobs</h2>
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 40px;">Manage Active Jobs</h2>
   <div id="admin-job-list">Loading jobs...</div>
 
   <script>
@@ -54,7 +55,7 @@
     async function loadPendingUsers() {
       const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-list');
-      if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
+      if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
       if (!users || !users.length) { container.innerHTML = '<p>No pending applications right now.</p>'; return; }
       
       container.innerHTML = users.map(u => `
@@ -81,15 +82,15 @@
       const { data: reports, error } = await supabaseClient.from('reports').select('*').eq('status', 'pending');
       const container = document.getElementById('reports-list');
       
-      if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
+      if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
       if (!reports || !reports.length) { container.innerHTML = '<p>No pending reports.</p>'; return; }
       
       container.innerHTML = reports.map(r => `
-        <div class="user-card" style="border-left: 6px solid #c9302c; background-color: #fff5f5;">
+        <div class="user-card" style="border-left: 6px solid #ef4444; background-color: rgba(239, 68, 68, 0.1);">
           <p><strong>Reported Info:</strong> ${r.offender_info}</p>
           <p><strong>Details:</strong> ${r.description}</p>
-          <p style="font-size: 12px; color: #666;">Submitted on: ${new Date(r.created_at).toLocaleDateString()}</p>
-          <button style="background: #4a7c59; width: auto; padding: 8px 16px; margin-top: 10px;" onclick="dismissReport('${r.id}')">Mark as Reviewed / Dismiss</button>
+          <p style="font-size: 12px; color: #a1a1aa;">Submitted on: ${new Date(r.created_at).toLocaleDateString()}</p>
+          <button style="background: #10b981; width: auto; padding: 8px 16px; margin-top: 10px;" onclick="dismissReport('${r.id}')">Mark as Reviewed / Dismiss</button>
         </div>
       `).join('');
     }
@@ -107,7 +108,7 @@
       const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'active');
       const container = document.getElementById('active-users-list');
       
-      if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
+      if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
       
       // Filter locally based on search bar
       const filteredUsers = users.filter(u => 
@@ -119,11 +120,11 @@
 
       container.innerHTML = filteredUsers.map(u => `
         <div class="user-card">
-          <h3 style="margin-top:0;">${u.full_name} <span style="color: #c9302c;">(Strikes: ${u.strikes || 0})</span></h3>
+          <h3 style="margin-top:0;">${u.full_name} <span style="color: #ef4444;">(Strikes: ${u.strikes || 0})</span></h3>
           <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
           <div style="margin-top: 10px;">
-            <button onclick="addStrike('${u.id}', ${u.strikes || 0})" style="background: #8b5a2b; width: auto; padding: 8px 16px; margin-right: 10px;">+1 Strike</button>
-            <button onclick="updateStatus('${u.id}', 'banned')" style="background: #c9302c; width: auto; padding: 8px 16px;">Ban User</button>
+            <button onclick="addStrike('${u.id}', ${u.strikes || 0})" style="background: #f59e0b; width: auto; padding: 8px 16px; margin-right: 10px; color: #121212;">+1 Strike</button>
+            <button onclick="updateStatus('${u.id}', 'banned')" style="background: #ef4444; width: auto; padding: 8px 16px;">Ban User</button>
           </div>
         </div>
       `).join('');
@@ -153,7 +154,7 @@
       const { data: jobs, error } = await supabaseClient.from('jobs').select('*').eq('status', 'open').order('created_at', { ascending: false });
       const container = document.getElementById('admin-job-list');
       
-      if (error) { container.innerHTML = `<p style="color:red">Error fetching jobs: ${error.message}</p>`; return; }
+      if (error) { container.innerHTML = `<p style="color:#ef4444">Error fetching jobs: ${error.message}</p>`; return; }
       if (!jobs || !jobs.length) { container.innerHTML = '<p>No active jobs on the board right now.</p>'; return; }
       
       container.innerHTML = jobs.map(j => `
@@ -161,8 +162,8 @@
           <h3 style="margin-top:0;">${j.title} ${j.is_emergency ? '🚨 [EMERGENCY]' : ''}</h3>
           <p><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
           <p>${j.description}</p>
-          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0dcd3;">
-            <button onclick="adminDeleteJob('${j.id}')" style="background: #c9302c; width: auto; padding: 8px 16px; font-size: 14px;">Delete Post (Admin)</button>
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
+            <button onclick="adminDeleteJob('${j.id}')" style="background: #ef4444; width: auto; padding: 8px 16px; font-size: 14px;">Delete Post (Admin)</button>
           </div>
         </div>
       `).join('');

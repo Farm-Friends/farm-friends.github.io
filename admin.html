@@ -132,18 +132,18 @@
     <div style="margin-bottom: 35px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h3 style="margin: 0; color: #fff;">Member Registry</h3>
-        <input type="text" id="user-search" placeholder="Filter by name or zip..." onkeyup="filterUsers()" style="padding: 6px 10px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 220px; font-size: 12px;">
+        <input type="text" id="user-search" placeholder="Filter by name, zip, or referral..." onkeyup="filterUsers()" style="padding: 6px 10px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 240px; font-size: 12px;">
       </div>
 
       <table class="admin-table">
         <thead>
           <tr>
-            <th style="width: 18%;">Member</th>
+            <th style="width: 22%;">Member</th>
             <th style="width: 16%;">Contact &amp; Travel</th>
             <th style="width: 8%;">Status</th>
             <th style="width: 8%;">Strikes</th>
-            <th style="width: 24%;">Award Badge</th>
-            <th style="width: 26%;">Moderation Actions</th>
+            <th style="width: 22%;">Award Badge</th>
+            <th style="width: 24%;">Moderation Actions</th>
           </tr>
         </thead>
         <tbody id="user-table-body">
@@ -239,11 +239,55 @@
         if (u.status === 'active') statusClass = 'status-active';
         if (u.status === 'banned') statusClass = 'status-banned';
 
+        // REFERRAL LOOKUP LOGIC
+        let referralHtml = '';
+
+        // 1. Who referred this user?
+        if (u.referrer_email) {
+          const referrerUser = allUsers.find(r => r.email && r.email.toLowerCase() === u.referrer_email.toLowerCase());
+          if (referrerUser) {
+            referralHtml += `
+              <div style="font-size: 11px; color: #10b981; margin-top: 3px;">
+                🎁 Referred by: <strong>${referrerUser.full_name}</strong> (${u.referrer_email}${referrerUser.phone ? ' | 📞 ' + referrerUser.phone : ''})
+              </div>`;
+          } else {
+            referralHtml += `
+              <div style="font-size: 11px; color: #a1a1aa; margin-top: 3px;">
+                🎁 Referred by: ${u.referrer_email} <span style="color:#eab308; opacity:0.8;">(Unmatched)</span>
+              </div>`;
+          }
+        }
+
+        // 2. Which members were referred BY this user?
+        if (u.email) {
+          const referredMembers = allUsers.filter(r => r.referrer_email && r.referrer_email.toLowerCase() === u.email.toLowerCase());
+          
+          if (referredMembers.length > 0) {
+            if (referredMembers.length <= 3) {
+              // Inline list for 1 to 3 referrals
+              const memberNames = referredMembers.map(m => `<strong>${m.full_name || 'Unnamed'}</strong>`).join(', ');
+              referralHtml += `
+                <div style="font-size: 11px; color: #3b82f6; margin-top: 3px;">
+                  👥 Referred (${referredMembers.length}): ${memberNames}
+                </div>`;
+            } else {
+              // Pop-up modal button for 4 or more referrals
+              referralHtml += `
+                <div style="font-size: 11px; margin-top: 4px;">
+                  <button onclick="showReferralsModal('${u.id}')" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; border-radius: 4px; padding: 2px 7px; font-size: 10px; cursor: pointer; font-weight: bold;">
+                    👥 View ${referredMembers.length} Referrals
+                  </button>
+                </div>`;
+            }
+          }
+        }
+
         return `
           <tr>
             <td>
               <strong style="color: #fff; font-size: 14px;">${u.full_name || 'Unnamed User'}</strong>
               <div style="font-size: 11px; color: #a1a1aa; margin-top: 2px;">Role: ${u.role || 'member'}</div>
+              ${referralHtml}
               ${badgeListHtml}
             </td>
             <td>
@@ -277,6 +321,43 @@
           </tr>
         `;
       }).join('');
+    }
+
+    // MODAL POP-UP FOR HIGH VOLUME REFERRALS
+    function showReferralsModal(userId) {
+      const existing = document.getElementById('ref-modal');
+      if (existing) existing.remove();
+
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) return;
+
+      const referred = allUsers.filter(r => r.referrer_email && r.referrer_email.toLowerCase() === user.email.toLowerCase());
+
+      const listHtml = referred.map(m => `
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #333;">
+          <div>
+            <strong style="color: #fff; display: block; font-size: 13px;">${m.full_name || 'Unnamed'}</strong>
+            <span style="color: #a1a1aa; font-size: 12px;">📞 ${m.phone || 'No phone'}</span>
+          </div>
+          <span class="status-pill status-${m.status || 'pending'}">${m.status || 'pending'}</span>
+        </div>
+      `).join('');
+
+      const modalHtml = `
+        <div id="ref-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+          <div style="background: #1e1e1e; border: 1px solid #444; border-radius: 8px; width: 420px; max-height: 80vh; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+              <h3 style="margin: 0; color: #fff; font-size: 16px;">Referrals by ${user.full_name || 'Member'} (${referred.length})</h3>
+              <button onclick="document.getElementById('ref-modal').remove()" style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+            <div style="overflow-y: auto; max-height: 380px; padding-right: 5px;">
+              ${listHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
     async function fetchGrievances() {
@@ -347,7 +428,8 @@
       const query = document.getElementById('user-search').value.toLowerCase();
       const filtered = allUsers.filter(u => 
         (u.full_name && u.full_name.toLowerCase().includes(query)) ||
-        (u.zip_code && u.zip_code.toLowerCase().includes(query))
+        (u.zip_code && u.zip_code.toLowerCase().includes(query)) ||
+        (u.referrer_email && u.referrer_email.toLowerCase().includes(query))
       );
       renderUserTable(filtered);
     }

@@ -1,0 +1,131 @@
+/* =========================================
+   BASE STYLES & LAYOUT
+   ========================================= */
+body { 
+  font-family: system-ui, -apple-system, sans-serif; 
+  background-color: #fdfbf7; 
+  color: #333; 
+  max-width: 800px; 
+  margin: 20px auto; 
+  padding: 0 20px; 
+}
+
+.narrow-container {
+  max-width: 500px;
+  margin-top: 40px;
+}
+
+.narrow-container h1, .narrow-container h2, .narrow-container h3 {
+  text-align: center;
+}
+
+h1, h2, h3 { 
+  font-family: Georgia, serif; 
+  color: #2c4c3b; 
+}
+
+.header { 
+  display: flex; justify-content: space-between; align-items: center; 
+  border-bottom: 3px solid #4a7c59; 
+  padding-bottom: 10px; margin-bottom: 20px; 
+}
+
+.hidden { display: none; }
+
+/* =========================================
+   CARDS & PANELS
+   ========================================= */
+.panel, form { 
+  background: #ffffff; 
+  padding: 20px; 
+  margin-bottom: 30px; 
+  border-radius: 8px; 
+  border: 1px solid #e0dcd3; 
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+}
+
+/* Remove extra padding when a form is inside a panel */
+.panel form {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  margin-bottom: 0;
+}
+
+.job-card, .user-card { 
+  background: #ffffff; 
+  border: 1px solid #e0dcd3; 
+  padding: 15px; 
+  margin-bottom: 15px; 
+  border-radius: 8px; 
+}
+
+.emergency { 
+  border-left: 6px solid #c9302c; 
+  background-color: #fff5f5; 
+}
+
+/* =========================================
+   FORMS & INPUTS
+   ========================================= */
+input, select, textarea { 
+  display: block; 
+  width: 100%; 
+  margin: 8px 0 16px; 
+  padding: 12px; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  box-sizing: border-box; 
+  font-family: inherit; 
+}
+
+input:focus, select:focus, textarea:focus { 
+  outline: none; 
+  border-color: #4a7c59; 
+  box-shadow: 0 0 0 2px rgba(74,124,89,0.2); 
+}
+
+.filter-row { display: flex; gap: 10px; }
+.filter-row > * { flex: 1; }
+
+/* =========================================
+   BUTTONS
+   ========================================= */
+button { 
+  display: block;
+  width: 100%;
+  background: #4a7c59; 
+  color: white; 
+  border: none; 
+  padding: 12px;
+  font-weight: bold; 
+  cursor: pointer; 
+  font-size: 16px; 
+  border-radius: 4px;
+  transition: background 0.2s; 
+}
+
+button:hover { background: #3b6347; }
+
+/* Specialty Buttons */
+.btn-logout { 
+  width: auto; 
+  background: #8b5a2b; 
+  padding: 8px 16px; 
+  margin: 0;
+}
+.btn-logout:hover { background: #6b4420; }
+
+.toggle-btn { 
+  background: none; 
+  color: #4a7c59; 
+  text-decoration: underline; 
+  margin-top: 10px;
+  margin-bottom: 20px; 
+  text-align: center; 
+}
+.toggle-btn:hover { background: none; color: #2c4c3b; }
+
+.approve, .reject { width: auto; display: inline-block; padding: 10px 16px; margin-right: 10px;}
+.reject { background: #c9302c; }
+.reject:hover { background: #a02622; }

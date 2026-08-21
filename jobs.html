@@ -26,7 +26,8 @@
           <option value="Fencing">Fencing</option>
           <option value="Livestock">Livestock</option>
           <option value="Harvest">Harvest</option>
-          <option value="General">General Maintenance</option>
+          <option value="Equipment">Equipment Operation</option>
+          <option value="General">General Labor</option>
         </select>
         <textarea id="description" placeholder="Work details..." required></textarea>
         <div class="filter-row" style="display: flex; gap: 10px;">
@@ -50,8 +51,8 @@
         <select id="filter_type" style="padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;" onchange="fetchJobs()">
           <option value="">All Types</option>
           <option value="Fencing">Fencing</option>
-          <option value="Livestock">Livestock Handling</option>
-          <option value="Harvest">Harvesting</option>
+          <option value="Livestock">Livestock</option>
+          <option value="Harvest">Harvest</option>
           <option value="Equipment">Equipment Operation</option>
           <option value="General">General Labor</option>
         </select>
@@ -67,6 +68,16 @@
       <p>Loading jobs...</p>
     </div>
   </main>
+
+  <!-- PUBLIC PROFILE BADGE MODAL -->
+  <div id="profile-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:#1e1e1e; padding:25px; border-radius:8px; border:1px solid #333; max-width:380px; width:90%; text-align:center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <h3 id="modal-user-name" style="margin-top:0; color:#fff;">User Badges</h3>
+      <p style="color:#a1a1aa; font-size:13px; margin-bottom:15px;">Community Badges & Verified Credentials</p>
+      <div id="modal-badges" class="badge-container" style="justify-content:center; margin-bottom:20px;"></div>
+      <button onclick="closeProfileModal()" style="background:#3b82f6; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Close</button>
+    </div>
+  </div>
 
   <script>
     // Initialize Supabase
@@ -88,11 +99,16 @@
     document.getElementById('job-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const { error } = await supabaseClient.from('jobs').insert([{
-        poster_id: currentUserId, title: document.getElementById('title').value,
-        work_type: document.getElementById('work_type').value, description: document.getElementById('description').value,
-        hours_min: document.getElementById('hours_min').value, hours_max: document.getElementById('hours_max').value,
-        zip_code: document.getElementById('zip_code').value, contact_phone: document.getElementById('contact_phone').value,
-        date_needed: document.getElementById('date_needed').value, is_emergency: document.getElementById('is_emergency').checked
+        poster_id: currentUserId, 
+        title: document.getElementById('title').value,
+        work_type: document.getElementById('work_type').value, 
+        description: document.getElementById('description').value,
+        hours_min: document.getElementById('hours_min').value, 
+        hours_max: document.getElementById('hours_max').value,
+        zip_code: document.getElementById('zip_code').value, 
+        contact_phone: document.getElementById('contact_phone').value,
+        date_needed: document.getElementById('date_needed').value, 
+        is_emergency: document.getElementById('is_emergency').checked
       }]);
       if (error) alert('Error posting job: ' + error.message);
       else { 
@@ -145,8 +161,12 @@
         return `
           <div class="job-card" style="background: #1e1e1e; padding: 20px; border-radius: 8px; ${emergencyBorder}">
             <div style="margin-bottom: 10px;">
-              <strong style="color: #a1a1aa; font-size: 14px;">Posted by ${posterName}</strong>
-              <div class="badge-container">${badgeDisplay}</div>
+              <a href="javascript:void(0)" 
+                 onclick="openPublicProfile('${posterName}', '${encodeURIComponent(JSON.stringify(badges))}')" 
+                 style="color: #3b82f6; text-decoration: underline; font-weight: bold; font-size: 14px;">
+                Posted by ${posterName} 🔍
+              </a>
+              <div class="badge-container" style="margin-top: 5px;">${badgeDisplay}</div>
             </div>
             <h3 style="margin-top:0; color: #fff;">${j.title} ${j.is_emergency ? '🚨 <span style="color:#ef4444; font-size: 14px;">[EMERGENCY]</span>' : ''}</h3>
             <p style="color: #ccc;"><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
@@ -157,6 +177,29 @@
           </div>
         `;
       }).join('');
+    }
+
+    // --- PUBLIC PROFILE MODAL FUNCTIONS ---
+    function openPublicProfile(name, badgesStr) {
+      const badges = JSON.parse(decodeURIComponent(badgesStr));
+      document.getElementById('modal-user-name').innerText = name;
+      const badgeContainer = document.getElementById('modal-badges');
+      
+      if (!badges.length) {
+        badgeContainer.innerHTML = '<p style="color:#a1a1aa; font-size:13px;">This member has not been awarded any badges yet.</p>';
+      } else {
+        badgeContainer.innerHTML = badges.map(b => {
+          let badgeClass = 'badge-community';
+          if (b.includes('Farmer')) badgeClass = 'badge-farmer';
+          if (b.includes('Hand')) badgeClass = 'badge-worker';
+          return `<span class="badge ${badgeClass}" style="font-size:13px; padding:5px 10px;">${b}</span>`;
+        }).join('');
+      }
+      document.getElementById('profile-modal').style.display = 'flex';
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profile-modal').style.display = 'none';
     }
 
     async function markJobFilled(jobId) {

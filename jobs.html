@@ -80,7 +80,7 @@
     </div>
   </div>
 
- <script>
+  <script>
     // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
@@ -235,16 +235,37 @@
 
     async function markJobFilled(jobId) {
       if (!confirm("Are you sure you want to mark this job as filled? It will be removed from the public board.")) return;
-      const { error } = await supabaseClient.from('jobs').update({ status: 'filled' }).eq('id', jobId);
-      if (error) alert("Error updating job: " + error.message);
-      else fetchJobs();
+      const { data, error } = await supabaseClient
+        .from('jobs')
+        .update({ status: 'filled' })
+        .eq('id', jobId)
+        .select();
+
+      if (error) {
+        alert("Error updating job: " + error.message);
+      } else if (!data || data.length === 0) {
+        alert("Could not update job. Ensure your Supabase RLS policy allows UPDATE for job owners.");
+      } else {
+        fetchJobs();
+      }
     }
 
     async function deleteJob(jobId) {
       if (!confirm("Are you sure you want to permanently delete this job post?")) return;
-      const { error } = await supabaseClient.from('jobs').delete().eq('id', jobId);
-      if (error) alert("Error deleting job: " + error.message);
-      else fetchJobs();
+      
+      const { data, error } = await supabaseClient
+        .from('jobs')
+        .delete()
+        .eq('id', jobId)
+        .select();
+
+      if (error) {
+        alert("Error deleting job: " + error.message);
+      } else if (!data || data.length === 0) {
+        alert("Could not delete job. Please verify that your Supabase 'jobs' table has a Row Level Security (RLS) policy enabling DELETE for authenticated users matching poster_id = auth.uid().");
+      } else {
+        fetchJobs();
+      }
     }
   </script>
 </body>

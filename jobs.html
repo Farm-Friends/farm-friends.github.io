@@ -79,7 +79,7 @@
     </div>
   </div>
 
-  <script>
+ <script>
     // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
@@ -89,9 +89,39 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      if (session) {
-        currentUserId = session.user.id;
+      
+      // Kick out unauthenticated visitors immediately
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
       }
+
+      currentUserId = session.user.id;
+
+      // Verify account status
+      const { data: profile, error } = await supabaseClient
+        .from('profiles')
+        .select('status, role')
+        .eq('id', currentUserId)
+        .single();
+
+      if (error || !profile) {
+        alert('Error verifying account credentials. Please log in again.');
+        await supabaseClient.auth.signOut();
+        window.location.href = 'index.html';
+        return;
+      }
+
+      if (profile.status === 'banned') {
+        window.location.href = 'banned.html';
+        return;
+      }
+
+      if (profile.status === 'pending' && profile.role !== 'admin') {
+        window.location.href = 'pending.html';
+        return;
+      }
+
       fetchJobs();
     });
 

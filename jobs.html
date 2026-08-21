@@ -134,6 +134,17 @@
       margin-top: 4px;
     }
 
+    .pay-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid #10b981;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
     /* Profile Popup Modal */
     #profile-modal {
       display: none;
@@ -199,8 +210,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Date Needed</label>
-            <input type="date" id="date_needed" required />
+            <label>Pay / Compensation</label>
+            <input type="text" id="pay" placeholder="e.g. $25/hr or $200 Flat" required />
           </div>
         </div>
 
@@ -221,6 +232,10 @@
           <div class="form-group">
             <label>Zip Code</label>
             <input type="text" id="zip_code" placeholder="e.g. 43210" maxlength="5" required />
+          </div>
+          <div class="form-group">
+            <label>Date Needed</label>
+            <input type="date" id="date_needed" required />
           </div>
           <div class="form-group">
             <label>Contact Phone</label>
@@ -339,6 +354,7 @@
         poster_id: currentUserId, 
         title: document.getElementById('title').value,
         work_type: document.getElementById('work_type').value, 
+        pay: document.getElementById('pay').value,
         description: document.getElementById('description').value,
         hours_min: document.getElementById('hours_min').value, 
         hours_max: document.getElementById('hours_max').value,
@@ -408,7 +424,10 @@
                 </a>
                 <div class="badge-container" style="margin-top: 4px; display: flex; gap: 4px;">${badgeDisplay}</div>
               </div>
-              ${j.is_emergency ? '<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🚨 EMERGENCY</span>' : ''}
+              <div style="display: flex; gap: 8px; align-items: center;">
+                ${j.pay ? `<span class="pay-badge">💵 ${j.pay}</span>` : ''}
+                ${j.is_emergency ? '<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🚨 EMERGENCY</span>' : ''}
+              </div>
             </div>
             
             <h3 style="margin: 10px 0 6px 0; color: #fff; font-size: 18px;">${j.title}</h3>

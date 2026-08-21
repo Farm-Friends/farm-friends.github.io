@@ -28,14 +28,42 @@
     </div>
   </main>
 
-  <script>
+ <script>
     // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Load active users on page load
-    document.addEventListener('DOMContentLoaded', loadActiveUsers);
+    // Run security check on page load
+    document.addEventListener('DOMContentLoaded', checkAdminAccess);
+
+    // --- SECURITY CHECK ---
+    async function checkAdminAccess() {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      // 1. Kick out if not logged in at all
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // 2. Fetch user's role from the database
+      const { data: profile, error } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      // 3. Kick out if they are not explicitly an admin
+      if (error || !profile || profile.role !== 'admin') {
+        alert("Access Denied: You do not have administrator privileges.");
+        window.location.href = 'jobs.html'; // Redirect them back to the job board
+        return;
+      }
+
+      // 4. If they pass the check, load the admin data!
+      loadActiveUsers();
+    }
 
     // --- USER DIRECTORY, STRIKES & BADGES ---
     async function loadActiveUsers() {

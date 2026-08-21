@@ -55,6 +55,15 @@
       }
     }
 
+    // Auto-fill referrer email if link contains ?ref=email@example.com
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('ref')) {
+        document.getElementById('referrer_email').value = urlParams.get('ref');
+        toggleAuth('signup'); 
+      }
+    });
+
     // Handle Login
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -68,20 +77,15 @@
         return;
       }
 
-      // Check profile status to redirect properly
       const { data: profile } = await supabaseClient
         .from('profiles')
         .select('status, role')
         .eq('id', data.user.id)
         .single();
 
-      if (profile?.role === 'admin') {
-        window.location.href = 'admin.html';
-      } else if (profile?.status === 'active') {
-        window.location.href = 'jobs.html';
-      } else {
-        window.location.href = 'pending.html';
-      }
+      if (profile?.role === 'admin') window.location.href = 'admin.html';
+      else if (profile?.status === 'active') window.location.href = 'jobs.html';
+      else window.location.href = 'pending.html';
     });
 
     // Handle Sign Up
@@ -103,9 +107,8 @@
         }
       });
 
-      if (error) {
-        alert('Error: ' + error.message);
-      } else {
+      if (error) alert('Error: ' + error.message);
+      else {
         alert('Application submitted!');
         window.location.href = 'pending.html';
       }

@@ -245,3 +245,23 @@ input[type="checkbox"] {
   color: #10b981;
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
+
+/* Footer Styles */
+.footer {
+  margin-top: 3rem;
+  padding: 1.5rem 0;
+  text-align: center;
+  border-top: 1px solid var(--border, #e2e8f0);
+  color: var(--text-muted, #64748b);
+  font-size: 0.875rem;
+}
+
+.footer a {
+  color: var(--text-muted, #64748b);
+  text-decoration: underline;
+  margin-left: 0.5rem;
+}
+
+.footer a:hover {
+  color: var(--primary, #2e7d32);
+}

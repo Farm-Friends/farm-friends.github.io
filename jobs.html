@@ -6,266 +6,339 @@
   <title>Job Board | Rural Network</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .jobs-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 15px;
+    }
+
+    .card {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0 0 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Styled Horizontal Divider */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      margin: 45px 0 35px 0;
+      gap: 15px;
+    }
+
+    .section-divider hr {
+      flex: 1;
+      border: none;
+      border-top: 1px solid #333;
+      margin: 0;
+    }
+
+    .section-divider-label {
+      background: #2a2a2a;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #333;
+      white-space: nowrap;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      color: #a1a1aa;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    input, select, textarea {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .btn-primary {
+      background: #10b981;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: opacity 0.15s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    .job-item {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: border-color 0.15s ease;
+    }
+
+    .job-item:hover {
+      border-color: #444;
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .job-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 13px;
+      color: #a1a1aa;
+      margin-top: 8px;
+    }
+
+    .job-pay {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid #10b981;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+  </style>
 </head>
 <body>
-  <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
-    <h1>Local Job Board</h1>
-    <nav style="display: flex; align-items: center;">
-      <a href="profile.html" style="color: #10b981; text-decoration: none; margin-right: 15px; font-weight: bold;">My Profile</a>
-      <a href="grievance.html" style="color: #ef4444; text-decoration: none; margin-right: 15px; font-size: 14px;">File Grievance</a>
-      <a href="admin.html" style="color: #a1a1aa; text-decoration: none; font-size: 14px;">Admin</a>
-    </nav>
-  </header>
 
-  <main>
-    <!-- JOB POST FORM -->
-    <div class="panel" style="margin-bottom: 20px;">
-      <h3 style="margin-top:0;">Submit a Job Request</h3>
-      <form id="job-form">
-        <input type="text" id="title" placeholder="Job Title (e.g., Hay Baling)" required />
-        <select id="work_type" required>
-          <option value="Fencing">Fencing</option>
-          <option value="Livestock">Livestock</option>
-          <option value="Harvest">Harvest</option>
-          <option value="Equipment">Equipment Operation</option>
-          <option value="General">General Labor</option>
-        </select>
-        <textarea id="description" placeholder="Work details..." required></textarea>
-        <div class="filter-row" style="display: flex; gap: 10px;">
-          <input type="number" id="hours_min" placeholder="Min Hours" min="1" required style="flex: 1;"/>
-          <input type="number" id="hours_max" placeholder="Max Hours" min="1" required style="flex: 1;"/>
+  <div class="jobs-container">
+    <!-- NAVIGATION & DASHBOARD HEADER -->
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #333;">
+      <div>
+        <h1 style="margin: 0; font-size: 26px;">🌾 Rural Network Jobs</h1>
+        <p style="margin: 5px 0 0 0; color: #a1a1aa; font-size: 14px;">Connect with local farms, hands, and equipment operators</p>
+      </div>
+      <nav style="display: flex; align-items: center; gap: 15px;">
+        <a href="profile.html" style="color: #3b82f6; text-decoration: none; font-size: 14px;">My Profile</a>
+        <a href="grievance.html" style="color: #ef4444; text-decoration: none; font-size: 14px;">File Report</a>
+        <a id="admin-link" href="admin.html" style="display: none; color: #f59e0b; text-decoration: none; font-size: 14px; font-weight: bold;">Admin Panel</a>
+        <button onclick="logout()" style="background: #333; color: #aaa; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">Log Out</button>
+      </nav>
+    </header>
+
+    <!-- SECTION 1: POST A JOB -->
+    <section class="card">
+      <div class="section-title">
+        <span>➕</span> Post a New Job Opportunity
+      </div>
+      <form id="job-form" onsubmit="createJob(event)">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Job Title</label>
+            <input type="text" id="job-title" placeholder="e.g. Fence Repair &amp; Hay Baling" required>
+          </div>
+          <div class="form-group">
+            <label>Pay / Compensation</label>
+            <input type="text" id="job-pay" placeholder="e.g. $25/hr or $200 Flat" required>
+          </div>
+          <div class="form-group">
+            <label>Location Zip Code</label>
+            <input type="text" id="job-zip" placeholder="e.g. 43210" required maxlength="5">
+          </div>
         </div>
-        <div class="filter-row" style="display: flex; gap: 10px;">
-          <input type="text" id="zip_code" placeholder="Zip Code" required style="flex: 1;"/>
-          <input type="tel" id="contact_phone" placeholder="Contact Phone Number" required style="flex: 1;"/>
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label>Job Description &amp; Requirements</label>
+          <textarea id="job-desc" rows="3" placeholder="Describe the tasks, tools provided, or experience needed..." required></textarea>
         </div>
-        <input type="date" id="date_needed" required />
-        <label style="display:block; margin-bottom:15px; cursor: pointer;"><input type="checkbox" id="is_emergency" style="display:inline; width:auto;"> Emergency / Short-Notice Job</label>
-        <button type="submit">Post Job</button>
+        <button type="submit" class="btn-primary">Publish Job Posting</button>
       </form>
+    </section>
+
+    <!-- SECTION DIVIDER -->
+    <div class="section-divider">
+      <hr>
+      <span class="section-divider-label">📋 Community Listings Feed</span>
+      <hr>
     </div>
 
-    <!-- Filters -->
-    <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
-      <div>
-        <label for="filter_type" style="display: block; font-size: 12px; color: #a1a1aa; margin-bottom: 5px;">Work Type</label>
-        <select id="filter_type" style="padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;" onchange="fetchJobs()">
-          <option value="">All Types</option>
-          <option value="Fencing">Fencing</option>
-          <option value="Livestock">Livestock</option>
-          <option value="Harvest">Harvest</option>
-          <option value="Equipment">Equipment Operation</option>
-          <option value="General">General Labor</option>
-        </select>
+    <!-- SECTION 2: JOB POSTINGS FEED -->
+    <section>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="section-title" style="margin: 0;">
+          <span>🔍</span> Available Job Postings
+        </div>
+        <input type="text" id="job-search" placeholder="Filter jobs by title, description, or zip..." onkeyup="filterJobs()" style="width: 280px; padding: 8px 12px;">
       </div>
-      <div>
-        <label for="filter_zip" style="display: block; font-size: 12px; color: #a1a1aa; margin-bottom: 5px;">Zip Code</label>
-        <input type="text" id="filter_zip" placeholder="e.g. 90210" style="padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;" onkeyup="fetchJobs()">
+
+      <div id="jobs-list">
+        <div style="text-align: center; color: #a1a1aa; padding: 40px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333;">
+          Loading local job listings...
+        </div>
       </div>
-    </div>
-
-    <!-- Job List Container -->
-    <div id="job-list" style="display: flex; flex-direction: column; gap: 20px;">
-      <p>Loading jobs...</p>
-    </div>
-  </main>
-
-  <!-- PUBLIC PROFILE BADGE MODAL -->
-  <div id="profile-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index:1000;">
-    <div style="background:#1e1e1e; padding:25px; border-radius:8px; border:1px solid #333; max-width:380px; width:90%; text-align:center; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-      <h3 id="modal-user-name" style="margin-top:0; color:#fff;">User Badges</h3>
-      <p style="color:#a1a1aa; font-size:13px; margin-bottom:15px;">Community Badges & Verified Credentials</p>
-      <div id="modal-badges" class="badge-container" style="justify-content:center; margin-bottom:20px;"></div>
-      <button onclick="closeProfileModal()" style="background:#3b82f6; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">Close</button>
-    </div>
+    </section>
   </div>
 
   <script>
-    // Initialize Supabase
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let currentUserId = null;
+    let allJobs = [];
+    let currentUser = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
-      
-      // Kick out unauthenticated visitors immediately
       if (!session) {
         window.location.href = 'index.html';
         return;
       }
 
-      currentUserId = session.user.id;
+      currentUser = session.user;
 
-      // Verify account status
-      const { data: profile, error } = await supabaseClient
+      // Check for Admin privileges to display link
+      const { data: profile } = await supabaseClient
         .from('profiles')
-        .select('status, role')
-        .eq('id', currentUserId)
+        .select('role')
+        .eq('id', currentUser.id)
         .single();
 
-      if (error || !profile) {
-        alert('Error verifying account credentials. Please log in again.');
-        await supabaseClient.auth.signOut();
-        window.location.href = 'index.html';
-        return;
+      if (profile && profile.role === 'admin') {
+        document.getElementById('admin-link').style.display = 'inline';
       }
 
-      if (profile.status === 'banned') {
-        window.location.href = 'banned.html';
-        return;
-      }
-
-      if (profile.status === 'pending' && profile.role !== 'admin') {
-        window.location.href = 'pending.html';
-        return;
-      }
-
-      fetchJobs();
-    });
-
-    // Handle Job Submission
-    document.getElementById('job-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const { error } = await supabaseClient.from('jobs').insert([{
-        poster_id: currentUserId, 
-        title: document.getElementById('title').value,
-        work_type: document.getElementById('work_type').value, 
-        description: document.getElementById('description').value,
-        hours_min: document.getElementById('hours_min').value, 
-        hours_max: document.getElementById('hours_max').value,
-        zip_code: document.getElementById('zip_code').value, 
-        contact_phone: document.getElementById('contact_phone').value,
-        date_needed: document.getElementById('date_needed').value, 
-        is_emergency: document.getElementById('is_emergency').checked
-      }]);
-      if (error) alert('Error posting job: ' + error.message);
-      else { 
-        document.getElementById('job-form').reset(); 
-        fetchJobs(); 
-        alert('Job posted successfully!');
-      }
+      await fetchJobs();
     });
 
     async function fetchJobs() {
-      const typeFilter = document.getElementById('filter_type').value;
-      const zipFilter = document.getElementById('filter_zip').value;
-      
-      let query = supabaseClient.from('jobs').select('*, profiles(full_name, badges)').eq('status', 'open');
-      if (typeFilter) query = query.eq('work_type', typeFilter);
-      if (zipFilter) query = query.eq('zip_code', zipFilter);
-      
-      const { data: jobs, error } = await query.order('created_at', { ascending: false });
-      const container = document.getElementById('job-list');
-      
-      if (error || !jobs || !jobs.length) { 
-        container.innerHTML = '<p>No open jobs match your criteria.</p>'; 
-        return; 
+      const { data: jobs, error } = await supabaseClient
+        .from('jobs')
+        .select('*, profiles(full_name, phone)')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        document.getElementById('jobs-list').innerHTML = `
+          <div style="text-align: center; color: #ef4444; padding: 30px;" class="card">
+            Failed to load jobs: ${error.message}
+          </div>`;
+        return;
       }
-      
+
+      allJobs = jobs || [];
+      renderJobs(allJobs);
+    }
+
+    function renderJobs(jobs) {
+      const container = document.getElementById('jobs-list');
+
+      if (!jobs.length) {
+        container.innerHTML = `
+          <div style="text-align: center; color: #a1a1aa; padding: 40px;" class="card">
+            No active job postings found. Be the first to post above!
+          </div>`;
+        return;
+      }
+
       container.innerHTML = jobs.map(j => {
-        const isOwner = j.poster_id === currentUserId;
-        const posterName = j.profiles?.full_name || 'Network Member';
-        const badges = j.profiles?.badges || [];
-        
-        const badgeDisplay = badges.map(b => {
-          let badgeClass = 'badge-community';
-          if (b.includes('Farmer')) badgeClass = 'badge-farmer';
-          if (b.includes('Hand')) badgeClass = 'badge-worker';
-          return `<span class="badge ${badgeClass}">${b}</span>`;
-        }).join('');
-
-        let managementButtons = '';
-        if (isOwner) {
-          managementButtons = `
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333; display: flex; gap: 10px;">
-              <button onclick="markJobFilled('${j.id}')" style="background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px;">Mark as Filled</button>
-              <button onclick="deleteJob('${j.id}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; font-size: 14px;">Delete Post</button>
-            </div>
-          `;
-        }
-
-        const emergencyBorder = j.is_emergency ? 'border: 1px solid #ef4444;' : 'border: 1px solid #333;';
+        const posterName = j.profiles ? j.profiles.full_name : 'Community Member';
+        const posterPhone = j.profiles ? j.profiles.phone : 'N/A';
 
         return `
-          <div class="job-card" style="background: #1e1e1e; padding: 20px; border-radius: 8px; ${emergencyBorder}">
-            <div style="margin-bottom: 10px;">
-              <a href="javascript:void(0)" 
-                 onclick="openPublicProfile('${posterName}', '${encodeURIComponent(JSON.stringify(badges))}')" 
-                 style="color: #3b82f6; text-decoration: underline; font-weight: bold; font-size: 14px;">
-                Posted by ${posterName} 🔍
-              </a>
-              <div class="badge-container" style="margin-top: 5px;">${badgeDisplay}</div>
+          <div class="job-item">
+            <div class="job-header">
+              <div>
+                <h3 style="margin: 0 0 6px 0; color: #fff; font-size: 18px;">${j.title}</h3>
+                <div style="font-size: 13px; color: #3b82f6;">Posted by: <strong>${posterName}</strong></div>
+              </div>
+              <span class="job-pay">${j.pay}</span>
             </div>
-            <h3 style="margin-top:0; color: #fff;">${j.title} ${j.is_emergency ? '🚨 <span style="color:#ef4444; font-size: 14px;">[EMERGENCY]</span>' : ''}</h3>
-            <p style="color: #ccc;"><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
-            <p style="color: #ddd;">${j.description}</p>
-            <p style="color: #ccc;"><strong>Est. Time:</strong> ${j.hours_min} - ${j.hours_max} hrs | <strong>Date Needed:</strong> ${j.date_needed}</p>
-            <p style="color: #ccc;"><strong>Contact:</strong> ${j.contact_phone}</p>
-            ${managementButtons}
+            <p style="color: #ccc; font-size: 14px; margin: 12px 0; line-height: 1.5;">${j.description}</p>
+            <div class="job-meta">
+              <span>📍 Zip Code: <strong>${j.zip_code}</strong></span>
+              <span>📞 Contact: <strong>${posterPhone}</strong></span>
+              <span>📅 Posted: <strong>${new Date(j.created_at).toLocaleDateString()}</strong></span>
+            </div>
           </div>
         `;
       }).join('');
     }
 
-    // --- PUBLIC PROFILE MODAL FUNCTIONS ---
-    function openPublicProfile(name, badgesStr) {
-      const badges = JSON.parse(decodeURIComponent(badgesStr));
-      document.getElementById('modal-user-name').innerText = name;
-      const badgeContainer = document.getElementById('modal-badges');
-      
-      if (!badges.length) {
-        badgeContainer.innerHTML = '<p style="color:#a1a1aa; font-size:13px;">This member has not been awarded any badges yet.</p>';
-      } else {
-        badgeContainer.innerHTML = badges.map(b => {
-          let badgeClass = 'badge-community';
-          if (b.includes('Farmer')) badgeClass = 'badge-farmer';
-          if (b.includes('Hand')) badgeClass = 'badge-worker';
-          return `<span class="badge ${badgeClass}" style="font-size:13px; padding:5px 10px;">${b}</span>`;
-        }).join('');
-      }
-      document.getElementById('profile-modal').style.display = 'flex';
-    }
+    async function createJob(e) {
+      e.preventDefault();
+      const title = document.getElementById('job-title').value;
+      const pay = document.getElementById('job-pay').value;
+      const zip_code = document.getElementById('job-zip').value;
+      const description = document.getElementById('job-desc').value;
 
-    function closeProfileModal() {
-      document.getElementById('profile-modal').style.display = 'none';
-    }
-
-    async function markJobFilled(jobId) {
-      if (!confirm("Are you sure you want to mark this job as filled? It will be removed from the public board.")) return;
-      const { data, error } = await supabaseClient
+      const { error } = await supabaseClient
         .from('jobs')
-        .update({ status: 'filled' })
-        .eq('id', jobId)
-        .select();
+        .insert([{
+          user_id: currentUser.id,
+          title,
+          pay,
+          zip_code,
+          description
+        }]);
 
       if (error) {
-        alert("Error updating job: " + error.message);
-      } else if (!data || data.length === 0) {
-        alert("Could not update job. Ensure your Supabase RLS policy allows UPDATE for job owners.");
+        alert('Error creating job: ' + error.message);
       } else {
-        fetchJobs();
+        document.getElementById('job-form').reset();
+        await fetchJobs();
       }
     }
 
-    async function deleteJob(jobId) {
-      if (!confirm("Are you sure you want to permanently delete this job post?")) return;
-      
-      const { data, error } = await supabaseClient
-        .from('jobs')
-        .delete()
-        .eq('id', jobId)
-        .select();
+    function filterJobs() {
+      const query = document.getElementById('job-search').value.toLowerCase();
+      const filtered = allJobs.filter(j => 
+        j.title.toLowerCase().includes(query) ||
+        j.description.toLowerCase().includes(query) ||
+        j.zip_code.toLowerCase().includes(query)
+      );
+      renderJobs(filtered);
+    }
 
-      if (error) {
-        alert("Error deleting job: " + error.message);
-      } else if (!data || data.length === 0) {
-        alert("Could not delete job. Please verify that your Supabase 'jobs' table has a Row Level Security (RLS) policy enabling DELETE for authenticated users matching poster_id = auth.uid().");
-      } else {
-        fetchJobs();
-      }
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
     }
   </script>
 </body>

@@ -10,16 +10,45 @@
     button { margin-right: 10px; padding: 8px 16px; cursor: pointer; border: none; font-weight: bold; }
     .approve { background-color: #2e7d32; color: white; }
     .reject { background-color: #d32f2f; color: white; }
+    .header { display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
-  <h2>Pending Member Applications</h2>
+  <div class="header">
+    <h2>Pending Member Applications</h2>
+    <button onclick="logout()">Log Out</button>
+  </div>
   <div id="pending-list">Loading pending applications...</div>
 
   <script>
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAdminAndLoad() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+
+      if (!user) {
+        alert('Please sign in first.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Verify Admin Role
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile || profile.role !== 'admin') {
+        alert('Access denied. You are not an administrator.');
+        window.location.href = 'index.html';
+        return;
+      }
+
+      loadPendingUsers();
+    }
 
     async function loadPendingUsers() {
       const { data: users, error } = await supabaseClient
@@ -28,8 +57,12 @@
         .eq('status', 'pending');
 
       const container = document.getElementById('pending-list');
-      if (error || !users.length) {
-        container.innerHTML = '<p>No pending applications.</p>';
+      if (error) {
+        container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
+        return;
+      }
+      if (!users || !users.length) {
+        container.innerHTML = '<p>No pending applications right now.</p>';
         return;
       }
 
@@ -49,11 +82,16 @@
         .update({ status: newStatus })
         .eq('id', userId);
 
-      if (error) alert('Error updating user status: ' + error.message);
+      if (error) alert('Error updating status: ' + error.message);
       else loadPendingUsers();
     }
 
-    loadPendingUsers();
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    checkAdminAndLoad();
   </script>
 </body>
 </html>

@@ -8,10 +8,17 @@
 </head>
 <body>
   <div class="header">
-    <h2>Pending Member Applications</h2>
+    <h2>Admin Dashboard</h2>
     <button class="btn-logout" onclick="logout()">Log Out</button>
   </div>
+
+  <!-- PENDING USERS SECTION -->
+  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px;">Pending Applications</h2>
   <div id="pending-list">Loading pending applications...</div>
+
+  <!-- JOB MODERATION SECTION -->
+  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px;">Manage Active Jobs</h2>
+  <div id="admin-job-list">Loading jobs...</div>
 
   <script>
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
@@ -21,16 +28,22 @@
     async function checkAdminAndLoad() {
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) { alert('Please sign in first.'); window.location.href = 'index.html'; return; }
+      
       const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();
       if (!profile || profile.role !== 'admin') { alert('Access denied.'); window.location.href = 'index.html'; return; }
+      
+      // Load both sections
       loadPendingUsers();
+      loadAdminJobs();
     }
 
+    // --- USER MANAGEMENT ---
     async function loadPendingUsers() {
       const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-list');
       if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
       if (!users || !users.length) { container.innerHTML = '<p>No pending applications right now.</p>'; return; }
+      
       container.innerHTML = users.map(u => `
         <div class="user-card">
           <h3 style="margin-top:0;">${u.full_name}</h3>
@@ -47,7 +60,38 @@
       else loadPendingUsers();
     }
 
+    // --- JOB MODERATION ---
+    async function loadAdminJobs() {
+      // Fetch all open jobs
+      const { data: jobs, error } = await supabaseClient.from('jobs').select('*').eq('status', 'open').order('created_at', { ascending: false });
+      const container = document.getElementById('admin-job-list');
+      
+      if (error) { container.innerHTML = `<p style="color:red">Error fetching jobs: ${error.message}</p>`; return; }
+      if (!jobs || !jobs.length) { container.innerHTML = '<p>No active jobs on the board right now.</p>'; return; }
+      
+      container.innerHTML = jobs.map(j => `
+        <div class="job-card ${j.is_emergency ? 'emergency' : ''}">
+          <h3 style="margin-top:0;">${j.title} ${j.is_emergency ? '🚨 [EMERGENCY]' : ''}</h3>
+          <p><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
+          <p>${j.description}</p>
+          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0dcd3;">
+            <button onclick="adminDeleteJob('${j.id}')" style="background: #c9302c; width: auto; padding: 8px 16px; font-size: 14px;">Delete Post (Admin)</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function adminDeleteJob(jobId) {
+      if (!confirm("ADMIN ACTION: Are you sure you want to permanently delete this job post?")) return;
+      
+      const { error } = await supabaseClient.from('jobs').delete().eq('id', jobId);
+      if (error) alert('Error: ' + error.message);
+      else loadAdminJobs(); // Refresh the list
+    }
+
     async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+    
+    // Initialize
     checkAdminAndLoad();
   </script>
 </body>

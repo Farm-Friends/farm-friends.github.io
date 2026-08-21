@@ -65,7 +65,10 @@
       if (error) { alert('Login failed: ' + error.message); return; }
 
       const { data: profile } = await supabaseClient.from('profiles').select('status, role').eq('id', data.user.id).single();
+      
+      // NEW ROUTING LOGIC (Banned user check)
       if (profile?.role === 'admin') window.location.href = 'admin.html';
+      else if (profile?.status === 'banned') window.location.href = 'banned.html';
       else if (profile?.status === 'active') window.location.href = 'jobs.html';
       else window.location.href = 'pending.html';
     });

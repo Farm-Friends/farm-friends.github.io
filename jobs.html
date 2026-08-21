@@ -86,10 +86,19 @@
       currentUserId = user.id;
 
       const { data: profile } = await supabaseClient.from('profiles').select('status, role').eq('id', user.id).single();
+      
+      // Kick them out if they are banned
+      if (profile?.status === 'banned') {
+        window.location.href = 'banned.html';
+        return;
+      }
+      
+      // Kick them to pending if they aren't active or an admin
       if (!profile || (profile.status !== 'active' && profile.role !== 'admin')) {
         window.location.href = 'pending.html';
         return;
       }
+      
       fetchJobs();
     }
 

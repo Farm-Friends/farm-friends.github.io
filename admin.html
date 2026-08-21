@@ -140,7 +140,7 @@
     }
 
     /* Stacked Layout for Mobile & Tablet screens */
-    @media (max-width: 992px) {
+    @media (max-width: 768px) {
       .header-container {
         flex-direction: column;
         align-items: flex-start;
@@ -159,7 +159,8 @@
         gap: 10px;
       }
 
-      #user-search {
+      #user-search, 
+      #grievance-search {
         width: 100% !important;
       }
 
@@ -263,7 +264,10 @@
 
     <!-- SECTION 2: GRIEVANCE REPORTS -->
     <div style="margin-bottom: 35px;">
-      <h3 style="margin: 0 0 12px 0; color: #fff;">Grievance Reports</h3>
+      <div class="section-header">
+        <h3 style="margin: 0; color: #fff;">Grievance Reports</h3>
+        <input type="text" id="grievance-search" placeholder="Filter by reporter, reported, or reason..." onkeyup="filterGrievances()" style="padding: 6px 10px; background: #1e1e1e; border: 1px solid #333; color: #fff; border-radius: 4px; width: 240px; font-size: 12px;">
+      </div>
       <table class="admin-table">
         <thead>
           <tr>
@@ -289,6 +293,7 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let allUsers = [];
+    let allGrievances = [];
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
@@ -474,8 +479,15 @@
         return;
       }
 
+      allGrievances = grievances || [];
+      renderGrievanceTable(allGrievances);
+    }
+
+    function renderGrievanceTable(grievances) {
+      const tbody = document.getElementById('grievance-table-body');
+
       if (!grievances || !grievances.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #a1a1aa; padding: 20px;">No grievances reported.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #a1a1aa; padding: 20px;">No matching grievance reports found.</td></tr>';
         return;
       }
 
@@ -523,6 +535,35 @@
           </tr>
         `;
       }).join('');
+    }
+
+    function filterGrievances() {
+      const query = document.getElementById('grievance-search').value.toLowerCase();
+      const filtered = allGrievances.filter(g => {
+        const reporter = allUsers.find(u => u.id === g.reporter_id);
+        const reported = allUsers.find(u => u.id === g.reported_user_id);
+
+        let reportedName = 'N/A / Deleted User';
+        if (reported) {
+          reportedName = reported.full_name;
+        } else if (g.details && g.details.includes('[Reported Member Info:')) {
+          const match = g.details.match(/\[Reported Member Info:\s*([^\]]+)\]/);
+          if (match && match[1]) {
+            reportedName = match[1].trim();
+          }
+        }
+
+        const reporterName = reporter ? reporter.full_name || '' : '';
+        const reason = g.reason || '';
+        const details = g.details || '';
+
+        return reporterName.toLowerCase().includes(query) ||
+               reportedName.toLowerCase().includes(query) ||
+               reason.toLowerCase().includes(query) ||
+               details.toLowerCase().includes(query);
+      });
+
+      renderGrievanceTable(filtered);
     }
 
     async function updateGrievanceStatus(id, status) {

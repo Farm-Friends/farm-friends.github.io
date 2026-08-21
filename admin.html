@@ -3,20 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>Admin Dashboard | Rural Network</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 0 20px; }
-    .user-card { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 6px; }
-    button { margin-right: 10px; padding: 8px 16px; cursor: pointer; border: none; font-weight: bold; }
-    .approve { background-color: #2e7d32; color: white; }
-    .reject { background-color: #d32f2f; color: white; }
-    .header { display: flex; justify-content: space-between; align-items: center; }
-  </style>
 </head>
 <body>
   <div class="header">
     <h2>Pending Member Applications</h2>
-    <button onclick="logout()">Log Out</button>
+    <button class="btn-logout" onclick="logout()">Log Out</button>
   </div>
   <div id="pending-list">Loading pending applications...</div>
 
@@ -27,48 +20,20 @@
 
     async function checkAdminAndLoad() {
       const { data: { user } } = await supabaseClient.auth.getUser();
-
-      if (!user) {
-        alert('Please sign in first.');
-        window.location.href = 'index.html';
-        return;
-      }
-
-      // Verify Admin Role
-      const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile || profile.role !== 'admin') {
-        alert('Access denied. You are not an administrator.');
-        window.location.href = 'index.html';
-        return;
-      }
-
+      if (!user) { alert('Please sign in first.'); window.location.href = 'index.html'; return; }
+      const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();
+      if (!profile || profile.role !== 'admin') { alert('Access denied.'); window.location.href = 'index.html'; return; }
       loadPendingUsers();
     }
 
     async function loadPendingUsers() {
-      const { data: users, error } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('status', 'pending');
-
+      const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-list');
-      if (error) {
-        container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
-        return;
-      }
-      if (!users || !users.length) {
-        container.innerHTML = '<p>No pending applications right now.</p>';
-        return;
-      }
-
+      if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
+      if (!users || !users.length) { container.innerHTML = '<p>No pending applications right now.</p>'; return; }
       container.innerHTML = users.map(u => `
         <div class="user-card">
-          <h4>${u.full_name}</h4>
+          <h3 style="margin-top:0;">${u.full_name}</h3>
           <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
           <button class="approve" onclick="updateStatus('${u.id}', 'active')">Approve</button>
           <button class="reject" onclick="updateStatus('${u.id}', 'rejected')">Reject</button>
@@ -77,20 +42,12 @@
     }
 
     async function updateStatus(userId, newStatus) {
-      const { error } = await supabaseClient
-        .from('profiles')
-        .update({ status: newStatus })
-        .eq('id', userId);
-
+      const { error } = await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', userId);
       if (error) alert('Error updating status: ' + error.message);
       else loadPendingUsers();
     }
 
-    async function logout() {
-      await supabaseClient.auth.signOut();
-      window.location.href = 'index.html';
-    }
-
+    async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
     checkAdminAndLoad();
   </script>
 </body>

@@ -3,19 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <title>Rural Network | Sign In or Register</title>
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body { font-family: sans-serif; max-width: 400px; margin: 40px auto; padding: 20px; }
-    input, button { width: 100%; margin-bottom: 12px; padding: 10px; box-sizing: border-box; }
-    button { background-color: #2e7d32; color: white; border: none; cursor: pointer; font-weight: bold; }
-    .toggle-btn { background: none; color: #1976d2; border: none; text-decoration: underline; margin-bottom: 20px; }
-    .hidden { display: none; }
-  </style>
 </head>
-<body>
+<body class="narrow-container">
 
   <!-- SIGN IN FORM -->
-  <div id="login-box">
+  <div id="login-box" class="panel">
     <h2>Sign In to Rural Network</h2>
     <form id="login-form">
       <input type="email" id="login_email" placeholder="Email Address" required />
@@ -26,7 +20,7 @@
   </div>
 
   <!-- SIGN UP FORM -->
-  <div id="signup-box" class="hidden">
+  <div id="signup-box" class="panel hidden">
     <h2>Join Rural Network</h2>
     <form id="signup-form">
       <input type="text" id="full_name" placeholder="Full Name" required />
@@ -55,7 +49,6 @@
       }
     }
 
-    // Auto-fill referrer email if link contains ?ref=email@example.com
     window.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.has('ref')) {
@@ -64,39 +57,25 @@
       }
     });
 
-    // Handle Login
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('login_email').value;
       const password = document.getElementById('login_password').value;
-
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) { alert('Login failed: ' + error.message); return; }
 
-      if (error) {
-        alert('Login failed: ' + error.message);
-        return;
-      }
-
-      const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('status, role')
-        .eq('id', data.user.id)
-        .single();
-
+      const { data: profile } = await supabaseClient.from('profiles').select('status, role').eq('id', data.user.id).single();
       if (profile?.role === 'admin') window.location.href = 'admin.html';
       else if (profile?.status === 'active') window.location.href = 'jobs.html';
       else window.location.href = 'pending.html';
     });
 
-    // Handle Sign Up
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-
       const { error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password,
+        email: email, password: password,
         options: {
           data: {
             full_name: document.getElementById('full_name').value,
@@ -106,12 +85,8 @@
           }
         }
       });
-
       if (error) alert('Error: ' + error.message);
-      else {
-        alert('Application submitted!');
-        window.location.href = 'pending.html';
-      }
+      else { alert('Application submitted!'); window.location.href = 'pending.html'; }
     });
   </script>
 </body>

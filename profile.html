@@ -33,7 +33,7 @@
     </div>
 
     <!-- UPDATE PROFILE FORM -->
-    <div class="panel">
+    <div class="panel" style="margin-bottom: 20px;">
       <h3 style="margin-top:0;">Update Details</h3>
       <form id="profile-form">
         <label style="display:block; margin-bottom:5px; color:#a1a1aa;">Full Name</label>
@@ -60,6 +60,22 @@
         <button type="submit" style="margin-top: 20px;">Save Changes</button>
       </form>
     </div>
+
+    <!-- ACTIVE POSTINGS SECTION -->
+    <div class="panel" style="background: #1e1e1e; border: 1px solid #333; margin-bottom: 20px;">
+      <h3 style="margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 18px;">Currently Active Postings</h3>
+      <div id="active-jobs-container">
+        <p style="color: #a1a1aa; font-size: 13px;">Loading active job postings...</p>
+      </div>
+    </div>
+
+    <!-- ARCHIVED POSTINGS SECTION (FLOATING TOP 10 FILLED) -->
+    <div class="panel" style="background: #1e1e1e; border: 1px solid #333; margin-bottom: 20px;">
+      <h3 style="margin-top: 0; color: #fff; border-bottom: 1px solid #333; padding-bottom: 10px; font-size: 18px;">Job History (Last 10 Filled)</h3>
+      <div id="archived-jobs-container">
+        <p style="color: #a1a1aa; font-size: 13px;">Loading archived jobs...</p>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -81,7 +97,8 @@
         return;
       }
       currentUserId = session.user.id;
-      loadProfileData();
+      await loadProfileData();
+      await loadUserJobs();
     });
 
     async function loadProfileData() {
@@ -139,6 +156,93 @@
         strikesContainer.innerHTML = '<span style="color: #10b981;">0 Strikes - Excellent Standing</span>';
       } else {
         strikesContainer.innerHTML = `<span style="color: #ef4444;">${strikes} Strike(s) on your account. 3 Strikes results in a ban.</span>`;
+      }
+    }
+
+    // LOAD ACTIVE AND ARCHIVED JOBS FOR LOGGED-IN USER
+    async function loadUserJobs() {
+      // 1. Active Jobs
+      const { data: activeJobs, error: activeErr } = await supabaseClient
+        .from('jobs')
+        .select('*')
+        .eq('poster_id', currentUserId)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      const activeContainer = document.getElementById('active-jobs-container');
+      if (activeErr) {
+        activeContainer.innerHTML = '<p style="color: #ef4444; font-size: 13px;">Error loading active postings.</p>';
+      } else if (!activeJobs || !activeJobs.length) {
+        activeContainer.innerHTML = '<p style="color: #a1a1aa; font-size: 13px;">You have no active job postings.</p>';
+      } else {
+        activeContainer.innerHTML = activeJobs.map(job => `
+          <div style="background: #2a2a2a; padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong style="color: #fff; font-size: 15px;">${job.title}</strong>
+              <div style="color: #a1a1aa; font-size: 12px; margin-top: 3px;">📍 ${job.zip_code || 'N/A'} | Posted ${new Date(job.created_at).toLocaleDateString()}</div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="markJobFilled('${job.id}')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Mark as Filled</button>
+              <button onclick="deleteJob('${job.id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Delete</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 2. Archived / Filled Jobs (Floating capped at 10)
+      const { data: filledJobs, error: filledErr } = await supabaseClient
+        .from('jobs')
+        .select('*')
+        .eq('poster_id', currentUserId)
+        .eq('status', 'filled')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      const archivedContainer = document.getElementById('archived-jobs-container');
+      if (filledErr) {
+        archivedContainer.innerHTML = '<p style="color: #ef4444; font-size: 13px;">Error loading archive history.</p>';
+      } else if (!filledJobs || !filledJobs.length) {
+        archivedContainer.innerHTML = '<p style="color: #a1a1aa; font-size: 13px;">No past filled jobs in your archive.</p>';
+      } else {
+        archivedContainer.innerHTML = filledJobs.map(job => `
+          <div style="background: #18181b; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; opacity: 0.85;">
+            <div>
+              <strong style="color: #e4e4e7; font-size: 14px;">${job.title}</strong>
+              <div style="color: #71717a; font-size: 12px; margin-top: 2px;">Completed / Filled</div>
+            </div>
+            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: bold;">Archived</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // MARK JOB AS FILLED (MOVES TO ARCHIVE)
+    async function markJobFilled(jobId) {
+      const { error } = await supabaseClient
+        .from('jobs')
+        .update({ status: 'filled' })
+        .eq('id', jobId);
+
+      if (error) {
+        alert('Error marking job as filled: ' + error.message);
+      } else {
+        await loadUserJobs();
+      }
+    }
+
+    // DELETE JOB PERMANENTLY (DOES NOT GO TO ARCHIVE)
+    async function deleteJob(jobId) {
+      if (!confirm('Are you sure you want to permanently delete this posting? It will not be archived.')) return;
+
+      const { error } = await supabaseClient
+        .from('jobs')
+        .delete()
+        .eq('id', jobId);
+
+      if (error) {
+        alert('Error deleting job: ' + error.message);
+      } else {
+        await loadUserJobs();
       }
     }
 

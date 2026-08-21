@@ -377,7 +377,15 @@
       const typeFilter = document.getElementById('filter_type').value;
       const zipFilter = document.getElementById('filter_zip').value;
       
-      let query = supabaseClient.from('jobs').select('*, profiles(full_name, badges)').eq('status', 'open');
+      // Auto-expiration filter: only fetch postings needed today or in the future
+      const today = new Date().toISOString().split('T')[0];
+
+      let query = supabaseClient
+        .from('jobs')
+        .select('*, profiles(full_name, badges)')
+        .eq('status', 'open')
+        .gte('date_needed', today);
+
       if (typeFilter) query = query.eq('work_type', typeFilter);
       if (zipFilter) query = query.eq('zip_code', zipFilter);
       

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submit Grievance | Rural Network</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="background: #121212; color: #fff; font-family: sans-serif;">
+
+  <header style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #333;">
+    <h1 style="margin: 0; font-size: 20px;">File a Grievance</h1>
+    <nav>
+      <a href="jobs.html" style="color: #3b82f6; text-decoration: none;">&larr; Back to Job Board</a>
+    </nav>
+  </header>
+
+  <main style="max-width: 500px; margin: 30px auto; padding: 0 15px;">
+    <div class="panel" style="background: #1e1e1e; padding: 25px; border-radius: 8px; border: 1px solid #333;">
+      <h2 style="margin-top: 0; color: #ef4444;">Community Report Form</h2>
+      <p style="color: #a1a1aa; font-size: 14px; margin-bottom: 20px;">
+        Submit complaints regarding safety, non-payment, no-shows, or code-of-conduct violations. Reports are reviewed directly by community administrators.
+      </p>
+
+      <form id="grievance-form">
+        <label style="display:block; margin-bottom:5px; color:#a1a1aa; font-size:14px;">Report Category</label>
+        <select id="reason" required style="width: 100%; padding: 10px; margin-bottom: 15px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box;">
+          <option value="No Show / Abandoned Job">No Show / Abandoned Job</option>
+          <option value="Non-Payment / Payment Dispute">Non-Payment / Payment Dispute</option>
+          <option value="Unsafe Work Conditions / Property Damage">Unsafe Work Conditions / Property Damage</option>
+          <option value="Harassment or Misconduct">Harassment or Misconduct</option>
+          <option value="Other">Other Violation</option>
+        </select>
+
+        <label style="display:block; margin-bottom:5px; color:#a1a1aa; font-size:14px;">Reported Member's Name or Phone (Optional)</label>
+        <input type="text" id="reported_user_info" placeholder="e.g. John Doe / 555-0199" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box;" />
+
+        <label style="display:block; margin-bottom:5px; color:#a1a1aa; font-size:14px;">Detailed Statement</label>
+        <textarea id="details" required rows="5" placeholder="Provide specific dates, job titles, and details of the incident..." style="width: 100%; padding: 10px; margin-bottom: 20px; background: #2a2a2a; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box;"></textarea>
+
+        <button type="submit" style="width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 15px;">Submit Formal Grievance</button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUserId = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+      currentUserId = session.user.id;
+    });
+
+    document.getElementById('grievance-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const reason = document.getElementById('reason').value;
+      const reportedInfo = document.getElementById('reported_user_info').value.trim();
+      const detailsText = document.getElementById('details').value.trim();
+
+      const fullDetails = reportedInfo 
+        ? `[Reported Member Info: ${reportedInfo}]\n\n${detailsText}`
+        : detailsText;
+
+      const { error } = await supabaseClient.from('grievances').insert([{
+        reporter_id: currentUserId,
+        reason: reason,
+        details: fullDetails
+      }]);
+
+      if (error) {
+        alert('Error submitting grievance: ' + error.message);
+      } else {
+        alert('Grievance submitted successfully. Admin staff will review this record.');
+        window.location.href = 'jobs.html';
+      }
+    });
+  </script>
+</body>
+</html>

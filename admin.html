@@ -5,180 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Rural Network</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="header">
-    <h2>Admin Dashboard</h2>
-    <button class="btn-logout" onclick="logout()">Log Out</button>
-  </div>
+  <header style="margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+    <h1>Admin Dashboard</h1>
+    <nav>
+      <a href="jobs.html" style="color: #3b82f6; text-decoration: none; margin-right: 15px;">&larr; Back to Job Board</a>
+    </nav>
+  </header>
 
-  <!-- PENDING USERS SECTION -->
-  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px;">Pending Applications</h2>
-  <div id="pending-list">Loading pending applications...</div>
+  <main>
+    <h2>Active User Directory</h2>
+    
+    <div style="margin-bottom: 20px;">
+      <input type="text" id="search_user" placeholder="Search by name or phone..." style="width: 100%; max-width: 400px; padding: 10px; border-radius: 4px; border: 1px solid #333; background: #1e1e1e; color: #fff;" onkeyup="loadActiveUsers()">
+    </div>
 
-  <!-- GRIEVANCES SECTION -->
-  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 40px; color: #ef4444;">Pending Grievance Reports</h2>
-  <div id="reports-list">Loading reports...</div>
-
-  <!-- USER DIRECTORY (STRIKE SYSTEM) -->
-  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 40px;">Active User Directory</h2>
-  <div class="panel" style="padding: 15px;">
-    <input type="text" id="search_user" placeholder="Search users by name or phone..." onkeyup="loadActiveUsers()" style="margin: 0;"/>
-  </div>
-  <div id="active-users-list">Loading users...</div>
-
-  <!-- JOB MODERATION SECTION -->
-  <h2 style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-top: 40px;">Manage Active Jobs</h2>
-  <div id="admin-job-list">Loading jobs...</div>
+    <div id="active-users-list" style="display: flex; flex-direction: column; gap: 15px;">
+      <p>Loading users...</p>
+    </div>
+  </main>
 
   <script>
-    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Initialize Supabase (Replace with your actual initialization if using a separate config file)
+    // const supabaseUrl = 'YOUR_SUPABASE_URL';
+    // const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+    // const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function checkAdminAndLoad() {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) { alert('Please sign in first.'); window.location.href = 'index.html'; return; }
-      
-      const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();
-      if (!profile || profile.role !== 'admin') { alert('Access denied.'); window.location.href = 'index.html'; return; }
-      
-      // Load all sections
-      loadPendingUsers();
-      loadReports();
-      loadActiveUsers();
-      loadAdminJobs();
-    }
+    // Load active users on page load
+    document.addEventListener('DOMContentLoaded', loadActiveUsers);
 
-    // --- PENDING USERS ---
-    async function loadPendingUsers() {
-      const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'pending');
-      const container = document.getElementById('pending-list');
-      if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
-      if (!users || !users.length) { container.innerHTML = '<p>No pending applications right now.</p>'; return; }
-      
-      container.innerHTML = users.map(u => `
-        <div class="user-card">
-          <h3 style="margin-top:0;">${u.full_name}</h3>
-          <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
-          <button class="approve" onclick="updateStatus('${u.id}', 'active')">Approve</button>
-          <button class="reject" onclick="updateStatus('${u.id}', 'rejected')">Reject</button>
-        </div>
-      `).join('');
-    }
-
-    async function updateStatus(userId, newStatus) {
-      const { error } = await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', userId);
-      if (error) alert('Error updating status: ' + error.message);
-      else {
-        loadPendingUsers();
-        loadActiveUsers(); // Refresh active list in case of a ban/approval
-      }
-    }
-
-    // --- GRIEVANCES ---
-    async function loadReports() {
-      const { data: reports, error } = await supabaseClient.from('reports').select('*').eq('status', 'pending');
-      const container = document.getElementById('reports-list');
-      
-      if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
-      if (!reports || !reports.length) { container.innerHTML = '<p>No pending reports.</p>'; return; }
-      
-      container.innerHTML = reports.map(r => `
-        <div class="user-card" style="border-left: 6px solid #ef4444; background-color: rgba(239, 68, 68, 0.1);">
-          <p><strong>Reported Info:</strong> ${r.offender_info}</p>
-          <p><strong>Details:</strong> ${r.description}</p>
-          <p style="font-size: 12px; color: #a1a1aa;">Submitted on: ${new Date(r.created_at).toLocaleDateString()}</p>
-          <button style="background: #10b981; width: auto; padding: 8px 16px; margin-top: 10px;" onclick="dismissReport('${r.id}')">Mark as Reviewed / Dismiss</button>
-        </div>
-      `).join('');
-    }
-
-    async function dismissReport(reportId) {
-      await supabaseClient.from('reports').update({ status: 'resolved' }).eq('id', reportId);
-      loadReports();
-    }
-
-    // --- USER DIRECTORY & STRIKES ---
+    // --- USER DIRECTORY, STRIKES & BADGES ---
     async function loadActiveUsers() {
       const searchTerm = document.getElementById('search_user').value.toLowerCase();
       
-      // Get all active users
       const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'active');
       const container = document.getElementById('active-users-list');
       
       if (error) { container.innerHTML = `<p style="color:#ef4444">Error: ${error.message}</p>`; return; }
       
-      // Filter locally based on search bar
       const filteredUsers = users.filter(u => 
         (u.full_name && u.full_name.toLowerCase().includes(searchTerm)) || 
         (u.phone && u.phone.includes(searchTerm))
       );
 
-      if (!filteredUsers.length) { container.innerHTML = '<p>No active users found.</p>'; return; }
+      if (!filteredUsers.length) { container.innerHTML = '<p>No active users found matching your search.</p>'; return; }
 
-      container.innerHTML = filteredUsers.map(u => `
-        <div class="user-card">
-          <h3 style="margin-top:0;">${u.full_name} <span style="color: #ef4444;">(Strikes: ${u.strikes || 0})</span></h3>
-          <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
-          <div style="margin-top: 10px;">
-            <button onclick="addStrike('${u.id}', ${u.strikes || 0})" style="background: #f59e0b; width: auto; padding: 8px 16px; margin-right: 10px; color: #121212;">+1 Strike</button>
-            <button onclick="updateStatus('${u.id}', 'banned')" style="background: #ef4444; width: auto; padding: 8px 16px;">Ban User</button>
+      container.innerHTML = filteredUsers.map(u => {
+        const userBadges = u.badges || [];
+        const badgeDisplay = userBadges.map(b => `<span class="badge badge-community">${b}</span>`).join('');
+        
+        return `
+          <div class="user-card" style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333;">
+            <h3 style="margin-top:0;">
+              ${u.full_name} 
+              <span style="color: #ef4444; font-size: 14px;">(Strikes: ${u.strikes || 0})</span>
+            </h3>
+            <div class="badge-container" style="margin-left: 0; margin-bottom: 10px;">${badgeDisplay}</div>
+            <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
+            
+            <div style="margin-top: 15px; border-top: 1px solid #333; padding-top: 10px;">
+              <select id="badge-select-${u.id}" style="width: auto; margin-right: 5px; padding: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;">
+                <option value="🚜 Verified Farmer">🚜 Verified Farmer</option>
+                <option value="🛠️ Trusted Hand">🛠️ Trusted Hand</option>
+                <option value="🤝 Community Vetted">🤝 Community Vetted</option>
+              </select>
+              <button onclick="awardBadge('${u.id}', '${encodeURIComponent(JSON.stringify(userBadges))}')" style="background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; margin-right: 10px;">Give Badge</button>
+              
+              <button onclick="addStrike('${u.id}', ${u.strikes || 0})" style="background: #f59e0b; color: #121212; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px; margin-right: 10px;">+1 Strike</button>
+              <button onclick="updateStatus('${u.id}', 'banned')" style="background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 8px 12px;">Ban User</button>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    async function addStrike(userId, currentStrikes) {
-      const newStrikes = currentStrikes + 1;
-      let confirmMsg = `Are you sure you want to add a strike? They will have ${newStrikes} total.`;
-      if (newStrikes >= 3) confirmMsg += "\n\nWARNING: This is their 3rd strike. They will be automatically banned.";
+    // --- NEW FUNCTION: AWARD BADGE ---
+    async function awardBadge(userId, currentBadgesStr) {
+      const currentBadges = JSON.parse(decodeURIComponent(currentBadgesStr));
+      const newBadge = document.getElementById(`badge-select-${userId}`).value;
       
-      if (!confirm(confirmMsg)) return;
-
-      if (newStrikes >= 3) {
-        // Auto-ban at 3 strikes
-        await supabaseClient.from('profiles').update({ strikes: newStrikes, status: 'banned' }).eq('id', userId);
-        alert('User reached 3 strikes and has been banned.');
-      } else {
-        // Just increment strikes
-        await supabaseClient.from('profiles').update({ strikes: newStrikes }).eq('id', userId);
+      if (currentBadges.includes(newBadge)) {
+        alert("User already has this badge!");
+        return;
       }
       
-      loadActiveUsers();
-    }
-
-    // --- JOB MODERATION ---
-    async function loadAdminJobs() {
-      const { data: jobs, error } = await supabaseClient.from('jobs').select('*').eq('status', 'open').order('created_at', { ascending: false });
-      const container = document.getElementById('admin-job-list');
+      const updatedBadges = [...currentBadges, newBadge];
       
-      if (error) { container.innerHTML = `<p style="color:#ef4444">Error fetching jobs: ${error.message}</p>`; return; }
-      if (!jobs || !jobs.length) { container.innerHTML = '<p>No active jobs on the board right now.</p>'; return; }
-      
-      container.innerHTML = jobs.map(j => `
-        <div class="job-card ${j.is_emergency ? 'emergency' : ''}">
-          <h3 style="margin-top:0;">${j.title} ${j.is_emergency ? '🚨 [EMERGENCY]' : ''}</h3>
-          <p><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
-          <p>${j.description}</p>
-          <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
-            <button onclick="adminDeleteJob('${j.id}')" style="background: #ef4444; width: auto; padding: 8px 16px; font-size: 14px;">Delete Post (Admin)</button>
-          </div>
-        </div>
-      `).join('');
+      const { error } = await supabaseClient.from('profiles').update({ badges: updatedBadges }).eq('id', userId);
+      if (error) {
+        alert("Error saving badge: " + error.message);
+      } else {
+        loadActiveUsers(); // Refresh the list to show the new badge
+      }
     }
 
-    async function adminDeleteJob(jobId) {
-      if (!confirm("ADMIN ACTION: Are you sure you want to permanently delete this job post?")) return;
-      const { error } = await supabaseClient.from('jobs').delete().eq('id', jobId);
-      if (error) alert('Error: ' + error.message);
-      else loadAdminJobs();
+    // --- EXISTING FUNCTIONS FOR MANAGEMENT ---
+    async function addStrike(userId, currentStrikes) {
+      if (!confirm("Are you sure you want to add a strike to this user?")) return;
+      const { error } = await supabaseClient.from('profiles').update({ strikes: currentStrikes + 1 }).eq('id', userId);
+      if (error) alert("Error adding strike: " + error.message);
+      else loadActiveUsers();
     }
 
-    async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-    
-    checkAdminAndLoad();
+    async function updateStatus(userId, newStatus) {
+      if (!confirm(`Are you sure you want to change this user's status to ${newStatus}?`)) return;
+      const { error } = await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', userId);
+      if (error) alert("Error updating status: " + error.message);
+      else loadActiveUsers();
+    }
   </script>
 </body>
 </html>

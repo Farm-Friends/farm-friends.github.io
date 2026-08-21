@@ -154,7 +154,7 @@
       else loadActiveUsers();
     }
 
-    // --- GRIEVANCE MANAGEMENT ---
+    // --- ENHANCED GRIEVANCE MANAGEMENT ---
     async function loadGrievances() {
       const container = document.getElementById('grievance-list');
       const { data: grievances, error } = await supabaseClient
@@ -180,9 +180,12 @@
             Filed by: <strong>${g.profiles?.full_name || 'Unknown'}</strong> (${g.profiles?.phone || 'N/A'}) on ${new Date(g.created_at).toLocaleDateString()}
           </p>
           <p style="color: #ddd; white-space: pre-wrap; font-size: 14px; background: #1e1e1e; padding: 10px; border-radius: 4px;">${g.details}</p>
-          <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button onclick="resolveGrievance('${g.id}', 'resolved')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Mark Resolved</button>
-            <button onclick="resolveGrievance('${g.id}', 'dismissed')" style="background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">Dismiss</button>
+          
+          <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; border-top: 1px solid #333; padding-top: 10px;">
+            <button onclick="resolveGrievance('${g.id}', 'resolved')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Mark Resolved</button>
+            <button onclick="actionAndResolveGrievance('${g.id}', 'strike')" style="background: #f59e0b; color: #121212; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px;">+1 Strike Offender & Resolve</button>
+            <button onclick="actionAndResolveGrievance('${g.id}', 'ban')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Ban Offender & Resolve</button>
+            <button onclick="resolveGrievance('${g.id}', 'dismissed')" style="background: #6b7280; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px;">Dismiss</button>
           </div>
         </div>
       `).join('');
@@ -192,6 +195,38 @@
       const { error } = await supabaseClient.from('grievances').update({ status }).eq('id', id);
       if (error) alert('Error updating status: ' + error.message);
       else loadGrievances();
+    }
+
+    // Quick Action: Prompt for reported user's phone or name, apply penalty, and archive grievance
+    async function actionAndResolveGrievance(grievanceId, actionType) {
+      const searchTerm = prompt(`Enter the reported user's EXACT phone number or name to apply this ${actionType}:`);
+      if (!searchTerm) return;
+
+      // Find user profile
+      const { data: users, error: searchError } = await supabaseClient
+        .from('profiles')
+        .select('id, full_name, strikes')
+        .or(`phone.eq.${searchTerm},full_name.ilike.%${searchTerm}%`);
+
+      if (searchError || !users || users.length === 0) {
+        alert("Could not locate a user matching that phone number or name. Action canceled.");
+        return;
+      }
+
+      const targetUser = users[0];
+
+      if (actionType === 'strike') {
+        const newStrikes = (targetUser.strikes || 0) + 1;
+        await supabaseClient.from('profiles').update({ strikes: newStrikes }).eq('id', targetUser.id);
+        alert(`Added 1 strike to ${targetUser.full_name}. Total strikes: ${newStrikes}`);
+      } else if (actionType === 'ban') {
+        await supabaseClient.from('profiles').update({ status: 'banned' }).eq('id', targetUser.id);
+        alert(`${targetUser.full_name} has been banned.`);
+      }
+
+      // Automatically resolve grievance after taking action
+      await resolveGrievance(grievanceId, 'resolved');
+      loadActiveUsers(); // Refresh user list above
     }
   </script>
 </body>

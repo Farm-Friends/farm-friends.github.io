@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     .jobs-container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 20px 15px;
     }
@@ -35,7 +35,7 @@
     .section-divider {
       display: flex;
       align-items: center;
-      margin: 45px 0 35px 0;
+      margin: 40px 0 30px 0;
       gap: 15px;
     }
 
@@ -61,7 +61,7 @@
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
       margin-bottom: 15px;
     }
@@ -73,7 +73,7 @@
     }
 
     .form-group label {
-      font-size: 12px;
+      font-size: 11px;
       color: #a1a1aa;
       font-weight: 600;
       text-transform: uppercase;
@@ -83,9 +83,9 @@
       background: #2a2a2a;
       border: 1px solid #444;
       color: #fff;
-      padding: 10px 12px;
+      padding: 9px 12px;
       border-radius: 6px;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     input:focus, select:focus, textarea:focus {
@@ -109,7 +109,7 @@
       opacity: 0.9;
     }
 
-    .job-item {
+    .job-card {
       background: #1e1e1e;
       border: 1px solid #333;
       border-radius: 8px;
@@ -118,33 +118,45 @@
       transition: border-color 0.15s ease;
     }
 
-    .job-item:hover {
-      border-color: #444;
+    .job-card.emergency {
+      border-color: #ef4444 !important;
+      background: rgba(239, 68, 68, 0.05);
     }
 
-    .job-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 10px;
-    }
-
-    .job-meta {
-      display: flex;
-      gap: 15px;
-      font-size: 13px;
+    .job-meta-tag {
+      display: inline-block;
+      background: #2a2a2a;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 12px;
       color: #a1a1aa;
-      margin-top: 8px;
+      margin-right: 8px;
+      margin-top: 4px;
     }
 
-    .job-pay {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-      border: 1px solid #10b981;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 13px;
+    /* Profile Popup Modal */
+    #profile-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: #1e1e1e;
+      padding: 25px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
   </style>
 </head>
@@ -152,69 +164,124 @@
 
   <div class="jobs-container">
     <!-- NAVIGATION & DASHBOARD HEADER -->
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #333;">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #333;">
       <div>
-        <h1 style="margin: 0; font-size: 26px;">🌾 Rural Network Jobs</h1>
-        <p style="margin: 5px 0 0 0; color: #a1a1aa; font-size: 14px;">Connect with local farms, hands, and equipment operators</p>
+        <h1 style="margin: 0; font-size: 24px;">🌾 Rural Network Job Board</h1>
+        <p style="margin: 4px 0 0 0; color: #a1a1aa; font-size: 13px;">Local community labor, equipment sharing, and farm requests</p>
       </div>
       <nav style="display: flex; align-items: center; gap: 15px;">
-        <a href="profile.html" style="color: #3b82f6; text-decoration: none; font-size: 14px;">My Profile</a>
-        <a href="grievance.html" style="color: #ef4444; text-decoration: none; font-size: 14px;">File Report</a>
+        <a href="profile.html" style="color: #10b981; text-decoration: none; font-weight: bold; font-size: 14px;">My Profile</a>
+        <a href="grievance.html" style="color: #ef4444; text-decoration: none; font-size: 14px;">File Grievance</a>
         <a id="admin-link" href="admin.html" style="display: none; color: #f59e0b; text-decoration: none; font-size: 14px; font-weight: bold;">Admin Panel</a>
         <button onclick="logout()" style="background: #333; color: #aaa; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;">Log Out</button>
       </nav>
     </header>
 
-    <!-- SECTION 1: POST A JOB -->
+    <!-- SECTION 1: POST A JOB REQUEST -->
     <section class="card">
       <div class="section-title">
-        <span>➕</span> Post a New Job Opportunity
+        <span>➕</span> Submit a Job Request
       </div>
-      <form id="job-form" onsubmit="createJob(event)">
+      <form id="job-form">
         <div class="form-grid">
           <div class="form-group" style="grid-column: span 2;">
             <label>Job Title</label>
-            <input type="text" id="job-title" placeholder="e.g. Fence Repair &amp; Hay Baling" required>
+            <input type="text" id="title" placeholder="Job Title (e.g., Hay Baling &amp; Stacking)" required />
           </div>
           <div class="form-group">
-            <label>Pay / Compensation</label>
-            <input type="text" id="job-pay" placeholder="e.g. $25/hr or $200 Flat" required>
+            <label>Type of Work</label>
+            <select id="work_type" required>
+              <option value="Fencing">Fencing</option>
+              <option value="Livestock">Livestock</option>
+              <option value="Harvest">Harvest</option>
+              <option value="Equipment">Equipment Operation</option>
+              <option value="General">General Labor</option>
+            </select>
           </div>
           <div class="form-group">
-            <label>Location Zip Code</label>
-            <input type="text" id="job-zip" placeholder="e.g. 43210" required maxlength="5">
+            <label>Date Needed</label>
+            <input type="date" id="date_needed" required />
           </div>
         </div>
-        <div class="form-group" style="margin-bottom: 18px;">
-          <label>Job Description &amp; Requirements</label>
-          <textarea id="job-desc" rows="3" placeholder="Describe the tasks, tools provided, or experience needed..." required></textarea>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label>Work Details &amp; Requirements</label>
+          <textarea id="description" rows="3" placeholder="Describe specific tasks, equipment provided, or physical requirements..." required></textarea>
         </div>
-        <button type="submit" class="btn-primary">Publish Job Posting</button>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Min Hours</label>
+            <input type="number" id="hours_min" placeholder="e.g. 2" min="1" required />
+          </div>
+          <div class="form-group">
+            <label>Max Hours</label>
+            <input type="number" id="hours_max" placeholder="e.g. 8" min="1" required />
+          </div>
+          <div class="form-group">
+            <label>Zip Code</label>
+            <input type="text" id="zip_code" placeholder="e.g. 43210" maxlength="5" required />
+          </div>
+          <div class="form-group">
+            <label>Contact Phone</label>
+            <input type="tel" id="contact_phone" placeholder="(555) 000-0000" required />
+          </div>
+        </div>
+
+        <div style="margin: 15px 0 20px 0;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #ef4444; font-weight: bold; font-size: 13px;">
+            <input type="checkbox" id="is_emergency" style="width: auto; height: auto;"> 🚨 Emergency / Short-Notice Job
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary">Post Job</button>
       </form>
     </section>
 
     <!-- SECTION DIVIDER -->
     <div class="section-divider">
       <hr>
-      <span class="section-divider-label">📋 Community Listings Feed</span>
+      <span class="section-divider-label">📋 Available Job Listings Feed</span>
       <hr>
     </div>
 
-    <!-- SECTION 2: JOB POSTINGS FEED -->
+    <!-- SECTION 2: AVAILABLE POSTINGS FEED & FILTERS -->
     <section>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div class="section-title" style="margin: 0;">
-          <span>🔍</span> Available Job Postings
+      <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+        <div>
+          <label for="filter_type" style="display: block; font-size: 11px; color: #a1a1aa; text-transform: uppercase; margin-bottom: 4px; font-weight: 600;">Work Type</label>
+          <select id="filter_type" style="padding: 7px 10px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;" onchange="fetchJobs()">
+            <option value="">All Types</option>
+            <option value="Fencing">Fencing</option>
+            <option value="Livestock">Livestock</option>
+            <option value="Harvest">Harvest</option>
+            <option value="Equipment">Equipment Operation</option>
+            <option value="General">General Labor</option>
+          </select>
         </div>
-        <input type="text" id="job-search" placeholder="Filter jobs by title, description, or zip..." onkeyup="filterJobs()" style="width: 280px; padding: 8px 12px;">
+        <div>
+          <label for="filter_zip" style="display: block; font-size: 11px; color: #a1a1aa; text-transform: uppercase; margin-bottom: 4px; font-weight: 600;">Zip Code</label>
+          <input type="text" id="filter_zip" placeholder="Filter by Zip..." style="padding: 7px 10px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;" onkeyup="fetchJobs()">
+        </div>
       </div>
 
-      <div id="jobs-list">
-        <div style="text-align: center; color: #a1a1aa; padding: 40px; background: #1e1e1e; border-radius: 8px; border: 1px solid #333;">
-          Loading local job listings...
+      <!-- Job List Container -->
+      <div id="job-list" style="display: flex; flex-direction: column; gap: 15px;">
+        <div style="text-align: center; color: #a1a1aa; padding: 30px;" class="card">
+          Loading jobs...
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- PUBLIC PROFILE BADGE MODAL -->
+  <div id="profile-modal">
+    <div class="modal-content">
+      <h3 id="modal-user-name" style="margin-top: 0; color: #fff;">User Badges</h3>
+      <p style="color: #a1a1aa; font-size: 13px; margin-bottom: 15px;">Community Badges &amp; Verified Credentials</p>
+      <div id="modal-badges" class="badge-container" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-bottom: 20px;"></div>
+      <button onclick="closeProfileModal()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;">Close</button>
+    </div>
   </div>
 
   <script>
@@ -222,118 +289,202 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let allJobs = [];
-    let currentUser = null;
+    let currentUserId = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabaseClient.auth.getSession();
+      
       if (!session) {
         window.location.href = 'index.html';
         return;
       }
 
-      currentUser = session.user;
+      currentUserId = session.user.id;
 
-      // Check for Admin privileges to display link
-      const { data: profile } = await supabaseClient
+      // Verify account status and admin credentials
+      const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('role')
-        .eq('id', currentUser.id)
+        .select('status, role')
+        .eq('id', currentUserId)
         .single();
 
-      if (profile && profile.role === 'admin') {
+      if (error || !profile) {
+        alert('Error verifying account credentials. Please log in again.');
+        await supabaseClient.auth.signOut();
+        window.location.href = 'index.html';
+        return;
+      }
+
+      if (profile.status === 'banned') {
+        window.location.href = 'banned.html';
+        return;
+      }
+
+      if (profile.status === 'pending' && profile.role !== 'admin') {
+        window.location.href = 'pending.html';
+        return;
+      }
+
+      if (profile.role === 'admin') {
         document.getElementById('admin-link').style.display = 'inline';
       }
 
-      await fetchJobs();
+      fetchJobs();
+    });
+
+    // Handle Job Submission
+    document.getElementById('job-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { error } = await supabaseClient.from('jobs').insert([{
+        poster_id: currentUserId, 
+        title: document.getElementById('title').value,
+        work_type: document.getElementById('work_type').value, 
+        description: document.getElementById('description').value,
+        hours_min: document.getElementById('hours_min').value, 
+        hours_max: document.getElementById('hours_max').value,
+        zip_code: document.getElementById('zip_code').value, 
+        contact_phone: document.getElementById('contact_phone').value,
+        date_needed: document.getElementById('date_needed').value, 
+        is_emergency: document.getElementById('is_emergency').checked
+      }]);
+
+      if (error) {
+        alert('Error posting job: ' + error.message);
+      } else { 
+        document.getElementById('job-form').reset(); 
+        fetchJobs(); 
+        alert('Job posted successfully!');
+      }
     });
 
     async function fetchJobs() {
-      const { data: jobs, error } = await supabaseClient
-        .from('jobs')
-        .select('*, profiles(full_name, phone)')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        document.getElementById('jobs-list').innerHTML = `
-          <div style="text-align: center; color: #ef4444; padding: 30px;" class="card">
-            Failed to load jobs: ${error.message}
-          </div>`;
-        return;
+      const typeFilter = document.getElementById('filter_type').value;
+      const zipFilter = document.getElementById('filter_zip').value;
+      
+      let query = supabaseClient.from('jobs').select('*, profiles(full_name, badges)').eq('status', 'open');
+      if (typeFilter) query = query.eq('work_type', typeFilter);
+      if (zipFilter) query = query.eq('zip_code', zipFilter);
+      
+      const { data: jobs, error } = await query.order('created_at', { ascending: false });
+      const container = document.getElementById('job-list');
+      
+      if (error || !jobs || !jobs.length) { 
+        container.innerHTML = '<div style="text-align: center; color: #a1a1aa; padding: 30px;" class="card">No open jobs match your criteria.</div>'; 
+        return; 
       }
-
-      allJobs = jobs || [];
-      renderJobs(allJobs);
-    }
-
-    function renderJobs(jobs) {
-      const container = document.getElementById('jobs-list');
-
-      if (!jobs.length) {
-        container.innerHTML = `
-          <div style="text-align: center; color: #a1a1aa; padding: 40px;" class="card">
-            No active job postings found. Be the first to post above!
-          </div>`;
-        return;
-      }
-
+      
       container.innerHTML = jobs.map(j => {
-        const posterName = j.profiles ? j.profiles.full_name : 'Community Member';
-        const posterPhone = j.profiles ? j.profiles.phone : 'N/A';
+        const isOwner = j.poster_id === currentUserId;
+        const posterName = j.profiles?.full_name || 'Network Member';
+        const badges = j.profiles?.badges || [];
+        
+        const badgeDisplay = badges.map(b => {
+          let badgeClass = 'badge-community';
+          if (b.includes('Farm')) badgeClass = 'badge-farmer';
+          if (b.includes('Hand')) badgeClass = 'badge-worker';
+          return `<span class="badge ${badgeClass}">${b}</span>`;
+        }).join('');
+
+        let managementButtons = '';
+        if (isOwner) {
+          managementButtons = `
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #333; display: flex; gap: 10px;">
+              <button onclick="markJobFilled('${j.id}')" style="background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 6px 12px; font-size: 13px; font-weight: 600;">Mark as Filled</button>
+              <button onclick="deleteJob('${j.id}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; padding: 6px 12px; font-size: 13px; font-weight: 600;">Delete Post</button>
+            </div>
+          `;
+        }
+
+        const emergencyClass = j.is_emergency ? 'emergency' : '';
 
         return `
-          <div class="job-item">
-            <div class="job-header">
+          <div class="job-card ${emergencyClass}">
+            <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <h3 style="margin: 0 0 6px 0; color: #fff; font-size: 18px;">${j.title}</h3>
-                <div style="font-size: 13px; color: #3b82f6;">Posted by: <strong>${posterName}</strong></div>
+                <a href="javascript:void(0)" 
+                   onclick="openPublicProfile('${posterName.replace(/'/g, "\\'")}', '${encodeURIComponent(JSON.stringify(badges))}')" 
+                   style="color: #3b82f6; text-decoration: underline; font-weight: bold; font-size: 14px;">
+                  Posted by ${posterName} 🔍
+                </a>
+                <div class="badge-container" style="margin-top: 4px; display: flex; gap: 4px;">${badgeDisplay}</div>
               </div>
-              <span class="job-pay">${j.pay}</span>
+              ${j.is_emergency ? '<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">🚨 EMERGENCY</span>' : ''}
             </div>
-            <p style="color: #ccc; font-size: 14px; margin: 12px 0; line-height: 1.5;">${j.description}</p>
-            <div class="job-meta">
-              <span>📍 Zip Code: <strong>${j.zip_code}</strong></span>
-              <span>📞 Contact: <strong>${posterPhone}</strong></span>
-              <span>📅 Posted: <strong>${new Date(j.created_at).toLocaleDateString()}</strong></span>
+            
+            <h3 style="margin: 10px 0 6px 0; color: #fff; font-size: 18px;">${j.title}</h3>
+            
+            <div style="margin-bottom: 10px;">
+              <span class="job-meta-tag">🏷️ ${j.work_type}</span>
+              <span class="job-meta-tag">📍 Zip ${j.zip_code}</span>
+              <span class="job-meta-tag">⏱️ ${j.hours_min} - ${j.hours_max} hrs</span>
+              <span class="job-meta-tag">📅 Date Needed: ${j.date_needed}</span>
             </div>
+
+            <p style="color: #ccc; font-size: 14px; line-height: 1.4; margin: 10px 0;">${j.description}</p>
+            <p style="color: #aaa; font-size: 13px; margin: 6px 0 0 0;">📞 Contact Phone: <strong style="color: #fff;">${j.contact_phone}</strong></p>
+            
+            ${managementButtons}
           </div>
         `;
       }).join('');
     }
 
-    async function createJob(e) {
-      e.preventDefault();
-      const title = document.getElementById('job-title').value;
-      const pay = document.getElementById('job-pay').value;
-      const zip_code = document.getElementById('job-zip').value;
-      const description = document.getElementById('job-desc').value;
+    // --- PUBLIC PROFILE MODAL FUNCTIONS ---
+    function openPublicProfile(name, badgesStr) {
+      const badges = JSON.parse(decodeURIComponent(badgesStr));
+      document.getElementById('modal-user-name').innerText = name;
+      const badgeContainer = document.getElementById('modal-badges');
+      
+      if (!badges.length) {
+        badgeContainer.innerHTML = '<p style="color:#a1a1aa; font-size:13px;">This member has not been awarded any badges yet.</p>';
+      } else {
+        badgeContainer.innerHTML = badges.map(b => {
+          let badgeClass = 'badge-community';
+          if (b.includes('Farm')) badgeClass = 'badge-farmer';
+          if (b.includes('Hand')) badgeClass = 'badge-worker';
+          return `<span class="badge ${badgeClass}" style="font-size:12px; padding:4px 8px;">${b}</span>`;
+        }).join('');
+      }
+      document.getElementById('profile-modal').style.display = 'flex';
+    }
 
-      const { error } = await supabaseClient
+    function closeProfileModal() {
+      document.getElementById('profile-modal').style.display = 'none';
+    }
+
+    async function markJobFilled(jobId) {
+      if (!confirm("Are you sure you want to mark this job as filled? It will be removed from the public board.")) return;
+      const { data, error } = await supabaseClient
         .from('jobs')
-        .insert([{
-          user_id: currentUser.id,
-          title,
-          pay,
-          zip_code,
-          description
-        }]);
+        .update({ status: 'filled' })
+        .eq('id', jobId)
+        .select();
 
       if (error) {
-        alert('Error creating job: ' + error.message);
+        alert("Error updating job: " + error.message);
+      } else if (!data || data.length === 0) {
+        alert("Could not update job. Ensure your Supabase RLS policy allows UPDATE for job owners.");
       } else {
-        document.getElementById('job-form').reset();
-        await fetchJobs();
+        fetchJobs();
       }
     }
 
-    function filterJobs() {
-      const query = document.getElementById('job-search').value.toLowerCase();
-      const filtered = allJobs.filter(j => 
-        j.title.toLowerCase().includes(query) ||
-        j.description.toLowerCase().includes(query) ||
-        j.zip_code.toLowerCase().includes(query)
-      );
-      renderJobs(filtered);
+    async function deleteJob(jobId) {
+      if (!confirm("Are you sure you want to permanently delete this job post?")) return;
+      
+      const { data, error } = await supabaseClient
+        .from('jobs')
+        .delete()
+        .eq('id', jobId)
+        .select();
+
+      if (error) {
+        alert("Error deleting job: " + error.message);
+      } else if (!data || data.length === 0) {
+        alert("Could not delete job. Please verify your Supabase 'jobs' table RLS policies.");
+      } else {
+        fetchJobs();
+      }
     }
 
     async function logout() {

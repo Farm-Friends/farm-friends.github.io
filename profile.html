@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile | Rural Network</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="narrow-container">
+
+  <div class="header">
+    <h2>My Profile</h2>
+    <div>
+      <button class="btn-logout" style="background: #4a7c59; margin-right: 8px;" onclick="window.location.href='jobs.html'">Back to Jobs</button>
+      <button class="btn-logout" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <form id="profile-form">
+      <label for="full_name"><strong>Full Name</strong></label>
+      <input type="text" id="full_name" required />
+
+      <label for="phone"><strong>Phone Number</strong></label>
+      <input type="tel" id="phone" required />
+
+      <label for="zip_code"><strong>Zip Code</strong></label>
+      <input type="text" id="zip_code" required />
+
+      <button type="submit">Save Changes</button>
+    </form>
+    <p id="success-message" class="hidden" style="color: #4a7c59; text-align: center; font-weight: bold; margin-top: 15px;">Profile updated successfully!</p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let currentUserId = null;
+
+    async function loadProfile() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+      
+      currentUserId = user.id;
+
+      // Fetch the user's profile data
+      const { data: profile, error } = await supabaseClient
+        .from('profiles')
+        .select('full_name, phone, zip_code')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        document.getElementById('full_name').value = profile.full_name || '';
+        document.getElementById('phone').value = profile.phone || '';
+        document.getElementById('zip_code').value = profile.zip_code || '';
+      }
+    }
+
+    // Handle form submission
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const newName = document.getElementById('full_name').value;
+      const newPhone = document.getElementById('phone').value;
+      const newZip = document.getElementById('zip_code').value;
+
+      const { error } = await supabaseClient
+        .from('profiles')
+        .update({ full_name: newName, phone: newPhone, zip_code: newZip })
+        .eq('id', currentUserId);
+
+      if (error) {
+        alert('Error updating profile: ' + error.message);
+      } else {
+        const msg = document.getElementById('success-message');
+        msg.classList.remove('hidden');
+        setTimeout(() => msg.classList.add('hidden'), 3000); // Hide after 3 seconds
+      }
+    });
+
+    async function logout() {
+      await supabaseClient.auth.signOut();
+      window.location.href = 'index.html';
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

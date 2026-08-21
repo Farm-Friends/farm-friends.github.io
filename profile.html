@@ -89,6 +89,15 @@
           <option value="500">Any distance / Statewide</option>
         </select>
 
+        <!-- JOB NOTIFICATION ALERT TOGGLE -->
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #333; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+          <div>
+            <label for="notify_jobs_nearby" style="display: block; color: #fff; font-weight: bold; font-size: 14px; cursor: pointer;">Nearby Job Email Alerts</label>
+            <p style="margin: 2px 0 0 0; color: #a1a1aa; font-size: 12px;">Get notified by email when new jobs are posted within your travel radius.</p>
+          </div>
+          <input type="checkbox" id="notify_jobs_nearby" style="transform: scale(1.3); cursor: pointer; accent-color: #3b82f6;" />
+        </div>
+
         <button type="submit" style="margin-top: 20px;">Save Changes</button>
       </form>
     </div>
@@ -136,7 +145,7 @@
     async function loadProfileData() {
       const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('full_name, phone, zip_code, max_distance, badges, strikes, last_name_change')
+        .select('full_name, phone, zip_code, max_distance, badges, strikes, last_name_change, notify_jobs_nearby')
         .eq('id', currentUserId)
         .single();
 
@@ -153,6 +162,7 @@
       document.getElementById('prof_phone').value = profile.phone || '';
       document.getElementById('prof_zip').value = profile.zip_code || '';
       document.getElementById('max_distance').value = profile.max_distance || 25;
+      document.getElementById('notify_jobs_nearby').checked = profile.notify_jobs_nearby ?? true;
 
       // Check if name change is currently restricted
       if (lastNameChange) {
@@ -297,11 +307,13 @@
       const newPhone = document.getElementById('prof_phone').value.trim();
       const newZip = document.getElementById('prof_zip').value.trim();
       const maxDistance = parseInt(document.getElementById('max_distance').value, 10);
+      const notifyNearby = document.getElementById('notify_jobs_nearby').checked;
 
       const updates = {
         phone: newPhone,
         zip_code: newZip,
-        max_distance: maxDistance
+        max_distance: maxDistance,
+        notify_jobs_nearby: notifyNearby
       };
 
       // Handle Name Change Restriction Logic

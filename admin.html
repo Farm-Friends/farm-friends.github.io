@@ -16,6 +16,17 @@
   <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px;">Pending Applications</h2>
   <div id="pending-list">Loading pending applications...</div>
 
+  <!-- GRIEVANCES SECTION -->
+  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px; color: #c9302c;">Pending Grievance Reports</h2>
+  <div id="reports-list">Loading reports...</div>
+
+  <!-- USER DIRECTORY (STRIKE SYSTEM) -->
+  <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px;">Active User Directory</h2>
+  <div class="panel" style="padding: 15px;">
+    <input type="text" id="search_user" placeholder="Search users by name or phone..." onkeyup="loadActiveUsers()" style="margin: 0;"/>
+  </div>
+  <div id="active-users-list">Loading users...</div>
+
   <!-- JOB MODERATION SECTION -->
   <h2 style="border-bottom: 2px solid #e0dcd3; padding-bottom: 10px; margin-top: 40px;">Manage Active Jobs</h2>
   <div id="admin-job-list">Loading jobs...</div>
@@ -32,12 +43,14 @@
       const { data: profile } = await supabaseClient.from('profiles').select('role').eq('id', user.id).single();
       if (!profile || profile.role !== 'admin') { alert('Access denied.'); window.location.href = 'index.html'; return; }
       
-      // Load both sections
+      // Load all sections
       loadPendingUsers();
+      loadReports();
+      loadActiveUsers();
       loadAdminJobs();
     }
 
-    // --- USER MANAGEMENT ---
+    // --- PENDING USERS ---
     async function loadPendingUsers() {
       const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'pending');
       const container = document.getElementById('pending-list');
@@ -57,12 +70,86 @@
     async function updateStatus(userId, newStatus) {
       const { error } = await supabaseClient.from('profiles').update({ status: newStatus }).eq('id', userId);
       if (error) alert('Error updating status: ' + error.message);
-      else loadPendingUsers();
+      else {
+        loadPendingUsers();
+        loadActiveUsers(); // Refresh active list in case of a ban/approval
+      }
+    }
+
+    // --- GRIEVANCES ---
+    async function loadReports() {
+      const { data: reports, error } = await supabaseClient.from('reports').select('*').eq('status', 'pending');
+      const container = document.getElementById('reports-list');
+      
+      if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
+      if (!reports || !reports.length) { container.innerHTML = '<p>No pending reports.</p>'; return; }
+      
+      container.innerHTML = reports.map(r => `
+        <div class="user-card" style="border-left: 6px solid #c9302c; background-color: #fff5f5;">
+          <p><strong>Reported Info:</strong> ${r.offender_info}</p>
+          <p><strong>Details:</strong> ${r.description}</p>
+          <p style="font-size: 12px; color: #666;">Submitted on: ${new Date(r.created_at).toLocaleDateString()}</p>
+          <button style="background: #4a7c59; width: auto; padding: 8px 16px; margin-top: 10px;" onclick="dismissReport('${r.id}')">Mark as Reviewed / Dismiss</button>
+        </div>
+      `).join('');
+    }
+
+    async function dismissReport(reportId) {
+      await supabaseClient.from('reports').update({ status: 'resolved' }).eq('id', reportId);
+      loadReports();
+    }
+
+    // --- USER DIRECTORY & STRIKES ---
+    async function loadActiveUsers() {
+      const searchTerm = document.getElementById('search_user').value.toLowerCase();
+      
+      // Get all active users
+      const { data: users, error } = await supabaseClient.from('profiles').select('*').eq('status', 'active');
+      const container = document.getElementById('active-users-list');
+      
+      if (error) { container.innerHTML = `<p style="color:red">Error: ${error.message}</p>`; return; }
+      
+      // Filter locally based on search bar
+      const filteredUsers = users.filter(u => 
+        (u.full_name && u.full_name.toLowerCase().includes(searchTerm)) || 
+        (u.phone && u.phone.includes(searchTerm))
+      );
+
+      if (!filteredUsers.length) { container.innerHTML = '<p>No active users found.</p>'; return; }
+
+      container.innerHTML = filteredUsers.map(u => `
+        <div class="user-card">
+          <h3 style="margin-top:0;">${u.full_name} <span style="color: #c9302c;">(Strikes: ${u.strikes || 0})</span></h3>
+          <p><strong>Phone:</strong> ${u.phone} | <strong>Zip:</strong> ${u.zip_code}</p>
+          <div style="margin-top: 10px;">
+            <button onclick="addStrike('${u.id}', ${u.strikes || 0})" style="background: #8b5a2b; width: auto; padding: 8px 16px; margin-right: 10px;">+1 Strike</button>
+            <button onclick="updateStatus('${u.id}', 'banned')" style="background: #c9302c; width: auto; padding: 8px 16px;">Ban User</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addStrike(userId, currentStrikes) {
+      const newStrikes = currentStrikes + 1;
+      let confirmMsg = `Are you sure you want to add a strike? They will have ${newStrikes} total.`;
+      if (newStrikes >= 3) confirmMsg += "\n\nWARNING: This is their 3rd strike. They will be automatically banned.";
+      
+      if (!confirm(confirmMsg)) return;
+
+      if (newStrikes >= 3) {
+        // Auto-ban at 3 strikes
+        await supabaseClient.from('profiles').update({ strikes: newStrikes, status: 'banned' }).eq('id', userId);
+        alert('User reached 3 strikes and has been banned.');
+      } else {
+        // Just increment strikes
+        await supabaseClient.from('profiles').update({ strikes: newStrikes }).eq('id', userId);
+      }
+      
+      loadActiveUsers();
     }
 
     // --- JOB MODERATION ---
     async function loadAdminJobs() {
-      // Fetch all open jobs
       const { data: jobs, error } = await supabaseClient.from('jobs').select('*').eq('status', 'open').order('created_at', { ascending: false });
       const container = document.getElementById('admin-job-list');
       
@@ -83,15 +170,13 @@
 
     async function adminDeleteJob(jobId) {
       if (!confirm("ADMIN ACTION: Are you sure you want to permanently delete this job post?")) return;
-      
       const { error } = await supabaseClient.from('jobs').delete().eq('id', jobId);
       if (error) alert('Error: ' + error.message);
-      else loadAdminJobs(); // Refresh the list
+      else loadAdminJobs();
     }
 
     async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
     
-    // Initialize
     checkAdminAndLoad();
   </script>
 </body>

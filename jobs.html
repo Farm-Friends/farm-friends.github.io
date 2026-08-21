@@ -39,10 +39,10 @@
   <script>
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function fetchJobs() {
-      const { data: jobs, error } = await supabase
+      const { data: jobs, error } = await supabaseClient
         .from('jobs')
         .select('*')
         .eq('status', 'open')
@@ -67,9 +67,9 @@
 
     document.getElementById('job-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await supabaseClient.auth.getUser()).data.user;
 
-      const { error } = await supabase.from('jobs').insert([{
+      const { error } = await supabaseClient.from('jobs').insert([{
         poster_id: user.id,
         title: document.getElementById('title').value,
         work_type: document.getElementById('work_type').value,

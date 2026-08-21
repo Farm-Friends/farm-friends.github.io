@@ -26,7 +26,7 @@
   <script>
     const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     document.getElementById('signup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -34,7 +34,7 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await supabaseClient.auth.signUp({
         email: email,
         password: password,
         options: {

@@ -31,7 +31,6 @@
       gap: 10px;
     }
 
-    /* Styled Horizontal Divider */
     .section-divider {
       display: flex;
       align-items: center;
@@ -145,7 +144,6 @@
       white-space: nowrap;
     }
 
-    /* Profile Popup Modal */
     #profile-modal {
       display: none;
       position: fixed;
@@ -174,7 +172,6 @@
 <body>
 
   <div class="jobs-container">
-    <!-- NAVIGATION & DASHBOARD HEADER -->
     <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #333;">
       <div>
         <h1 style="margin: 0; font-size: 24px;">🌾 Rural Network Job Board</h1>
@@ -188,7 +185,6 @@
       </nav>
     </header>
 
-    <!-- SECTION 1: POST A JOB REQUEST -->
     <section class="card">
       <div class="section-title">
         <span>➕</span> Submit a Job Request
@@ -253,14 +249,12 @@
       </form>
     </section>
 
-    <!-- SECTION DIVIDER -->
     <div class="section-divider">
       <hr>
       <span class="section-divider-label">📋 Available Job Listings Feed</span>
       <hr>
     </div>
 
-    <!-- SECTION 2: AVAILABLE POSTINGS FEED & FILTERS -->
     <section>
       <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
         <div>
@@ -280,7 +274,6 @@
         </div>
       </div>
 
-      <!-- Job List Container -->
       <div id="job-list" style="display: flex; flex-direction: column; gap: 15px;">
         <div style="text-align: center; color: #a1a1aa; padding: 30px;" class="card">
           Loading jobs...
@@ -289,7 +282,6 @@
     </section>
   </div>
 
-  <!-- PUBLIC PROFILE BADGE MODAL -->
   <div id="profile-modal">
     <div class="modal-content">
       <h3 id="modal-user-name" style="margin-top: 0; color: #fff;">User Badges</h3>
@@ -316,7 +308,6 @@
 
       currentUserId = session.user.id;
 
-      // Verify account status and admin credentials
       const { data: profile, error } = await supabaseClient
         .from('profiles')
         .select('status, role')
@@ -361,7 +352,8 @@
         zip_code: document.getElementById('zip_code').value, 
         contact_phone: document.getElementById('contact_phone').value,
         date_needed: document.getElementById('date_needed').value, 
-        is_emergency: document.getElementById('is_emergency').checked
+        is_emergency: document.getElementById('is_emergency').checked,
+        status: 'open' // Explicitly set status to match fetch criteria
       }]);
 
       if (error) {
@@ -377,13 +369,15 @@
       const typeFilter = document.getElementById('filter_type').value;
       const zipFilter = document.getElementById('filter_zip').value;
       
-      // Auto-expiration filter: only fetch postings needed today or in the future
-      const today = new Date().toISOString().split('T')[0];
+      // Fix timezone offset issue by retrieving local YYYY-MM-DD
+      const localDate = new Date();
+      const today = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
 
+      // Query jobs with status 'open' or 'active'
       let query = supabaseClient
         .from('jobs')
         .select('*, profiles(full_name, badges)')
-        .eq('status', 'open')
+        .in('status', ['open', 'active'])
         .gte('date_needed', today);
 
       if (typeFilter) query = query.eq('work_type', typeFilter);
@@ -392,7 +386,13 @@
       const { data: jobs, error } = await query.order('created_at', { ascending: false });
       const container = document.getElementById('job-list');
       
-      if (error || !jobs || !jobs.length) { 
+      if (error) {
+        console.error('Fetch Jobs Error:', error);
+        container.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 30px;" class="card">Error loading jobs: ${error.message}</div>`;
+        return;
+      }
+
+      if (!jobs || !jobs.length) { 
         container.innerHTML = '<div style="text-align: center; color: #a1a1aa; padding: 30px;" class="card">No open jobs match your criteria.</div>'; 
         return; 
       }
@@ -456,7 +456,6 @@
       }).join('');
     }
 
-    // --- PUBLIC PROFILE MODAL FUNCTIONS ---
     function openPublicProfile(name, badgesStr) {
       const badges = JSON.parse(decodeURIComponent(badgesStr));
       document.getElementById('modal-user-name').innerText = name;

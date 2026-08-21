@@ -2,94 +2,133 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Profile | Rural Network</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="narrow-container">
+<body>
 
-  <div class="header">
-    <h2>My Profile</h2>
-    <div>
-      <button class="btn-logout" style="background: #4a7c59; margin-right: 8px;" onclick="window.location.href='jobs.html'">Back to Jobs</button>
-      <button class="btn-logout" onclick="logout()">Log Out</button>
+  <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+    <h1>My Profile</h1>
+    <nav>
+      <a href="jobs.html" style="color: #3b82f6; text-decoration: none; margin-right: 15px;">&larr; Back to Job Board</a>
+      <button class="btn-logout" onclick="logout()" style="padding: 6px 12px; font-size: 14px;">Log Out</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- BADGES & STRIKES SECTION -->
+    <div class="panel" style="background: #1e1e1e; border: 1px solid #333; margin-bottom: 20px; text-align: center;">
+      <h2 style="margin-top: 0; color: #fff;">Community Standing</h2>
+      
+      <div id="my-badges" class="badge-container" style="justify-content: center; margin: 15px 0;">
+        <p style="color: #a1a1aa; font-size: 14px;">Loading badges...</p>
+      </div>
+
+      <div id="my-strikes" style="margin-top: 15px; font-weight: bold;">
+        <!-- Strikes will render here -->
+      </div>
     </div>
-  </div>
 
-  <div class="panel">
-    <form id="profile-form">
-      <label for="full_name"><strong>Full Name</strong></label>
-      <input type="text" id="full_name" required />
+    <!-- UPDATE PROFILE FORM -->
+    <div class="panel">
+      <h3 style="margin-top:0;">Update Details</h3>
+      <form id="profile-form">
+        <label style="display:block; margin-bottom:5px; color:#a1a1aa;">Full Name</label>
+        <input type="text" id="prof_name" required />
+        
+        <label style="display:block; margin-bottom:5px; color:#a1a1aa; margin-top:10px;">Phone Number</label>
+        <input type="tel" id="prof_phone" required />
+        
+        <label style="display:block; margin-bottom:5px; color:#a1a1aa; margin-top:10px;">Zip Code</label>
+        <input type="text" id="prof_zip" required />
 
-      <label for="phone"><strong>Phone Number</strong></label>
-      <input type="tel" id="phone" required />
-
-      <label for="zip_code"><strong>Zip Code</strong></label>
-      <input type="text" id="zip_code" required />
-
-      <button type="submit">Save Changes</button>
-    </form>
-    <p id="success-message" class="hidden" style="color: #4a7c59; text-align: center; font-weight: bold; margin-top: 15px;">Profile updated successfully!</p>
-  </div>
+        <button type="submit" style="margin-top: 20px;">Save Changes</button>
+      </form>
+    </div>
+  </main>
 
   <script>
-    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
+    // Initialize Supabase (Replace with your actual keys if using a config file)
+    // const supabaseUrl = 'YOUR_SUPABASE_URL';
+    // const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+    // const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
     let currentUserId = null;
 
-    async function loadProfile() {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (!user) {
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
         window.location.href = 'index.html';
         return;
       }
-      
-      currentUserId = user.id;
+      currentUserId = session.user.id;
+      loadProfileData();
+    });
 
-      // Fetch the user's profile data
+    async function loadProfileData() {
       const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('full_name, phone, zip_code')
-        .eq('id', user.id)
+        .select('full_name, phone, zip_code, badges, strikes')
+        .eq('id', currentUserId)
         .single();
 
-      if (profile) {
-        document.getElementById('full_name').value = profile.full_name || '';
-        document.getElementById('phone').value = profile.phone || '';
-        document.getElementById('zip_code').value = profile.zip_code || '';
+      if (error) {
+        alert("Error loading profile: " + error.message);
+        return;
+      }
+
+      // Populate Form
+      document.getElementById('prof_name').value = profile.full_name || '';
+      document.getElementById('prof_phone').value = profile.phone || '';
+      document.getElementById('prof_zip').value = profile.zip_code || '';
+
+      // Render Badges
+      const badgeContainer = document.getElementById('my-badges');
+      const badges = profile.badges || [];
+      
+      if (badges.length === 0) {
+        badgeContainer.innerHTML = '<p style="color: #a1a1aa; font-size: 14px;">You have not earned any badges yet. Keep completing jobs reliably!</p>';
+      } else {
+        badgeContainer.innerHTML = badges.map(b => {
+          let badgeClass = 'badge-community';
+          if (b.includes('Farmer')) badgeClass = 'badge-farmer';
+          if (b.includes('Hand')) badgeClass = 'badge-worker';
+          return `<span class="badge ${badgeClass}" style="font-size: 14px; padding: 6px 12px;">${b}</span>`;
+        }).join('');
+      }
+
+      // Render Strikes
+      const strikesContainer = document.getElementById('my-strikes');
+      const strikes = profile.strikes || 0;
+      
+      if (strikes === 0) {
+        strikesContainer.innerHTML = '<span style="color: #10b981;">0 Strikes - Excellent Standing</span>';
+      } else {
+        strikesContainer.innerHTML = `<span style="color: #ef4444;">${strikes} Strike(s) on your account. 3 Strikes results in a ban.</span>`;
       }
     }
 
-    // Handle form submission
+    // Handle Profile Update
     document.getElementById('profile-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const updates = {
+        full_name: document.getElementById('prof_name').value,
+        phone: document.getElementById('prof_phone').value,
+        zip_code: document.getElementById('prof_zip').value,
+      };
+
+      const { error } = await supabaseClient.from('profiles').update(updates).eq('id', currentUserId);
       
-      const newName = document.getElementById('full_name').value;
-      const newPhone = document.getElementById('phone').value;
-      const newZip = document.getElementById('zip_code').value;
-
-      const { error } = await supabaseClient
-        .from('profiles')
-        .update({ full_name: newName, phone: newPhone, zip_code: newZip })
-        .eq('id', currentUserId);
-
-      if (error) {
-        alert('Error updating profile: ' + error.message);
-      } else {
-        const msg = document.getElementById('success-message');
-        msg.classList.remove('hidden');
-        setTimeout(() => msg.classList.add('hidden'), 3000); // Hide after 3 seconds
-      }
+      if (error) alert("Error updating profile: " + error.message);
+      else alert("Profile updated successfully!");
     });
 
     async function logout() {
       await supabaseClient.auth.signOut();
       window.location.href = 'index.html';
     }
-
-    loadProfile();
   </script>
 </body>
 </html>

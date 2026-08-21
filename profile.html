@@ -189,7 +189,7 @@
         `).join('');
       }
 
-      // 2. Archived / Filled Jobs (Floating capped at 10)
+      // 2. Archived / Filled Jobs (Floating capped at 10 - Excludes Description, Emergency Tag, and Contact Phone)
       const { data: filledJobs, error: filledErr } = await supabaseClient
         .from('jobs')
         .select('*')
@@ -205,12 +205,23 @@
         archivedContainer.innerHTML = '<p style="color: #a1a1aa; font-size: 13px;">No past filled jobs in your archive.</p>';
       } else {
         archivedContainer.innerHTML = filledJobs.map(job => `
-          <div style="background: #18181b; padding: 12px 16px; border-radius: 6px; margin-bottom: 8px; border: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; opacity: 0.85;">
-            <div>
-              <strong style="color: #e4e4e7; font-size: 14px;">${job.title}</strong>
-              <div style="color: #71717a; font-size: 12px; margin-top: 2px;">Completed / Filled</div>
+          <div style="background: #18181b; padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #27272a; opacity: 0.9;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <strong style="color: #fff; font-size: 16px;">${job.title}</strong>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                ${job.pay ? `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; padding: 3px 10px; border-radius: 12px; font-weight: bold; font-size: 12px;">💵 ${job.pay}</span>` : ''}
+                <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; border-radius: 12px; padding: 3px 8px; font-size: 11px; font-weight: bold;">Archived</span>
+              </div>
             </div>
-            <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981; border-radius: 12px; padding: 2px 8px; font-size: 11px; font-weight: bold;">Archived</span>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <span style="background: #2a2a2a; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #a1a1aa;">🏷️ ${job.work_type || 'General'}</span>
+              <span style="background: #2a2a2a; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #a1a1aa;">📍 Zip ${job.zip_code || 'N/A'}</span>
+              <span style="background: #2a2a2a; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #a1a1aa;">⏱️ ${job.hours_min || 0} - ${job.hours_max || 0} hrs</span>
+              <span style="background: #2a2a2a; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #a1a1aa;">📅 Date Needed: ${job.date_needed || 'N/A'}</span>
+            </div>
           </div>
         `).join('');
       }

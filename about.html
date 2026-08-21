@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About & Guide - Farm Friends</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="brand">🚜 Farm Friends</a>
+      <div class="nav-links">
+        <a href="jobs.html">Jobs</a>
+        <a href="about.html" class="active">About</a>
+        <a href="profile.html">Profile</a>
+        <a href="grievance.html">Report Issue</a>
+        <button id="logoutBtn" class="btn btn-outline">Log Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- Our Mission -->
+    <section class="card hero-card">
+      <h1>Neighborly Trust, Hand-to-Hand Work</h1>
+      <p class="subtitle">
+        Farm Friends is built on the timeless tradition of local agricultural community support. When harvests are heavy, fences need mending, or livestock requires urgent care, we connect trusted hands with neighbors who need help.
+      </p>
+    </section>
+
+    <!-- How It Works -->
+    <section class="card">
+      <h2>How Farm Friends Works</h2>
+      <div class="grid-3">
+        <div class="feature-box">
+          <h3>1. Referral-Based Membership</h3>
+          <p>Trust starts before you even post a job. New members are vetted or invited by existing neighbors, ensuring our directory remains safe, honest, and accountable.</p>
+        </div>
+        <div class="feature-box">
+          <h3>2. Radius-Based Job Alerts</h3>
+          <p>When a job is posted, our system automatically calculates the mileage distance using ZIP codes and instantly emails eligible local hands nearby.</p>
+        </div>
+        <div class="feature-box">
+          <h3>3. Direct Neighbor Support</h3>
+          <p>No middlemen taking cuts. Connect directly over phone or text to arrange fair pay, barter, or mutual farm assistance.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Profile Options & Notification Settings -->
+    <section class="card">
+      <h2>Managing Your Profile & Preferences</h2>
+      <p>Your profile controls how local jobs find you. You can update these settings anytime on your <strong>Profile</strong> page:</p>
+      
+      <ul class="guide-list">
+        <li>
+          <strong>Travel Radius (Max Distance):</strong> Set how many miles you are willing to travel for farm calls (e.g., 10, 25, 50 miles). You will only receive email alerts for postings within your set radius.
+        </li>
+        <li>
+          <strong>Job Alert Toggle:</strong> Turn instant email notifications on or off with a single click.
+        </li>
+        <li>
+          <strong>Location & Contact:</strong> Keep your primary ZIP code updated so our automated distance calculator can accurately calculate mileage for new jobs.
+        </li>
+      </ul>
+    </section>
+
+    <!-- Badges & Community Standing -->
+    <section class="card">
+      <h2>Community Badges & Accountability</h2>
+      <p>Badges highlight experience, reliability, and special contributions within the Farm Friends network:</p>
+      
+      <div class="badge-grid">
+        <div class="badge-item">
+          <span class="badge badge-primary">🤝 Verified Member</span>
+          <p>Granted upon approval after account verification or member referral.</p>
+        </div>
+        <div class="badge-item">
+          <span class="badge badge-success">🚜 Veteran Hand</span>
+          <p>Recognizes experienced hands with a proven track record of reliable farm work.</p>
+        </div>
+        <div class="badge-item">
+          <span class="badge badge-warning">⚡ Emergency Helper</span>
+          <p>Opted in and ready to assist during sudden storm damage, escaped livestock, or urgent repairs.</p>
+        </div>
+        <div class="badge-item">
+          <span class="badge badge-info">⭐ Founding Neighbor</span>
+          <p>Awarded to early members who helped build and grow the local network.</p>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <h3>Maintaining Trust (Grievances & Strikes)</h3>
+      <p>
+        To protect local farms and workers, members who violate community agreements, fail to show up without notice, or behave unneighborly may be reported via the <strong>Report Issue</strong> tab. Admins review reports to issue strikes or remove bad actors from the network.
+      </p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -48,6 +48,15 @@
         <label style="display:block; margin-bottom:5px; color:#a1a1aa; margin-top:10px;">Zip Code</label>
         <input type="text" id="prof_zip" required />
 
+        <label for="max_distance" style="display: block; margin-bottom: 5px; color: #a1a1aa; margin-top: 10px; font-size: 14px;">Maximum Travel Distance</label>
+        <select id="max_distance" style="width: 100%; padding: 10px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px;">
+          <option value="10">Within 10 miles</option>
+          <option value="25">Within 25 miles</option>
+          <option value="50">Within 50 miles</option>
+          <option value="100">Within 100 miles</option>
+          <option value="500">Any distance / Statewide</option>
+        </select>
+
         <button type="submit" style="margin-top: 20px;">Save Changes</button>
       </form>
     </div>
@@ -78,7 +87,7 @@
     async function loadProfileData() {
       const { data: profile, error } = await supabaseClient
         .from('profiles')
-        .select('full_name, phone, zip_code, badges, strikes, last_name_change')
+        .select('full_name, phone, zip_code, max_distance, badges, strikes, last_name_change')
         .eq('id', currentUserId)
         .single();
 
@@ -94,6 +103,7 @@
       document.getElementById('prof_name').value = originalName;
       document.getElementById('prof_phone').value = profile.phone || '';
       document.getElementById('prof_zip').value = profile.zip_code || '';
+      document.getElementById('max_distance').value = profile.max_distance || 25;
 
       // Check if name change is currently restricted
       if (lastNameChange) {
@@ -139,10 +149,12 @@
       const newName = document.getElementById('prof_name').value.trim();
       const newPhone = document.getElementById('prof_phone').value.trim();
       const newZip = document.getElementById('prof_zip').value.trim();
+      const maxDistance = parseInt(document.getElementById('max_distance').value, 10);
 
       const updates = {
         phone: newPhone,
-        zip_code: newZip
+        zip_code: newZip,
+        max_distance: maxDistance
       };
 
       // Handle Name Change Restriction Logic

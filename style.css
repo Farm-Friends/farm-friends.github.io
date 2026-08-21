@@ -207,3 +207,41 @@ input[type="checkbox"] {
     width: 100%;
   }
 }
+
+/* =========================================================
+   USER BADGES
+   ========================================================= */
+.badge-container {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.badge {
+  display: inline-block;
+  background-color: #2a2a2a;
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Specific Badge Colors */
+.badge-farmer {
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-worker {
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-community {
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}

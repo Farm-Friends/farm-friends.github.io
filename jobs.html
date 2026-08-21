@@ -9,10 +9,12 @@
     .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; margin-bottom: 20px; }
     .job-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
     .emergency { border-left: 6px solid #d32f2f; background-color: #fff8f8; }
-    form { background: #f9f9f9; padding: 15px; margin-bottom: 30px; border-radius: 6px; }
+    .panel { background: #f9f9f9; padding: 15px; margin-bottom: 30px; border-radius: 6px; border: 1px solid #eee; }
     input, select, textarea, button { display: block; width: 100%; margin: 8px 0; padding: 8px; box-sizing: border-box; }
     button { background: #2e7d32; color: white; border: none; font-weight: bold; cursor: pointer; }
     .btn-logout { width: auto; background: #555; padding: 6px 16px; }
+    .filter-row { display: flex; gap: 10px; }
+    .filter-row > * { flex: 1; }
   </style>
 </head>
 <body>
@@ -22,24 +24,48 @@
     <button class="btn-logout" onclick="logout()">Log Out</button>
   </div>
 
-  <h2>Submit a Job Request</h2>
-  <form id="job-form">
-    <input type="text" id="title" placeholder="Job Title (e.g., Hay Baling)" required />
-    <select id="work_type" required>
-      <option value="Fencing">Fencing</option>
-      <option value="Livestock">Livestock</option>
-      <option value="Harvest">Harvest</option>
-      <option value="Maintenance">General Maintenance</option>
-    </select>
-    <textarea id="description" placeholder="Work details..." required></textarea>
-    <input type="number" id="hours_min" placeholder="Min Hours" required />
-    <input type="number" id="hours_max" placeholder="Max Hours" required />
-    <input type="text" id="zip_code" placeholder="Zip Code" required />
-    <input type="tel" id="contact_phone" placeholder="Contact Phone Number" required />
-    <input type="date" id="date_needed" required />
-    <label><input type="checkbox" id="is_emergency" style="display:inline; width:auto;"> Emergency / Short-Notice Job</label>
-    <button type="submit">Post Job</button>
-  </form>
+  <div class="panel">
+    <h3>Filter Jobs</h3>
+    <div class="filter-row">
+      <select id="filter_type">
+        <option value="">All Job Types</option>
+        <option value="Fencing">Fencing</option>
+        <option value="Livestock">Livestock</option>
+        <option value="Harvest">Harvest</option>
+        <option value="Maintenance">General Maintenance</option>
+      </select>
+      <input type="text" id="filter_zip" placeholder="Zip Code (optional)" />
+      <button onclick="fetchJobs()">Search</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Submit a Job Request</h3>
+    <form id="job-form">
+      <input type="text" id="title" placeholder="Job Title (e.g., Hay Baling)" required />
+      <select id="work_type" required>
+        <option value="Fencing">Fencing</option>
+        <option value="Livestock">Livestock</option>
+        <option value="Harvest">Harvest</option>
+        <option value="Maintenance">General Maintenance</option>
+      </select>
+      <textarea id="description" placeholder="Work details..." required></textarea>
+      
+      <div class="filter-row">
+        <input type="number" id="hours_min" placeholder="Min Hours" required />
+        <input type="number" id="hours_max" placeholder="Max Hours" required />
+      </div>
+      
+      <div class="filter-row">
+        <input type="text" id="zip_code" placeholder="Zip Code" required />
+        <input type="tel" id="contact_phone" placeholder="Contact Phone Number" required />
+      </div>
+      
+      <input type="date" id="date_needed" required />
+      <label><input type="checkbox" id="is_emergency" style="display:inline; width:auto;"> Emergency / Short-Notice Job</label>
+      <button type="submit">Post Job</button>
+    </form>
+  </div>
 
   <h2>Available Listings</h2>
   <div id="job-list">Loading jobs...</div>
@@ -51,46 +77,44 @@
 
     async function checkAccessAndLoad() {
       const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) { window.location.href = 'index.html'; return; }
 
-      if (!user) {
-        window.location.href = 'index.html';
-        return;
-      }
-
-      // Verify active membership status
       const { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('status, role')
-        .eq('id', user.id)
-        .single();
+        .from('profiles').select('status, role').eq('id', user.id).single();
 
       if (!profile || (profile.status !== 'active' && profile.role !== 'admin')) {
         window.location.href = 'pending.html';
         return;
       }
-
       fetchJobs();
     }
 
     async function fetchJobs() {
-      const { data: jobs, error } = await supabaseClient
-        .from('jobs')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
+      const typeFilter = document.getElementById('filter_type').value;
+      const zipFilter = document.getElementById('filter_zip').value;
+
+      // Start building the query
+      let query = supabaseClient.from('jobs').select('*').eq('status', 'open');
+
+      // Conditionally add filters if the user provided them
+      if (typeFilter) query = query.eq('work_type', typeFilter);
+      if (zipFilter) query = query.eq('zip_code', zipFilter);
+
+      // Execute query
+      const { data: jobs, error } = await query.order('created_at', { ascending: false });
 
       const container = document.getElementById('job-list');
       if (error || !jobs || !jobs.length) {
-        container.innerHTML = '<p>No open jobs available right now.</p>';
+        container.innerHTML = '<p>No open jobs match your criteria.</p>';
         return;
       }
 
       container.innerHTML = jobs.map(j => `
         <div class="job-card ${j.is_emergency ? 'emergency' : ''}">
-          <h3>${j.title} ${j.is_emergency ? '🚨 [EMERGENCY]' : ''}</h3>
+          <h3 style="margin-top:0;">${j.title} ${j.is_emergency ? '🚨 [EMERGENCY]' : ''}</h3>
           <p><strong>Type:</strong> ${j.work_type} | <strong>Location:</strong> Zip ${j.zip_code}</p>
           <p>${j.description}</p>
-          <p><strong>Est. Time:</strong> ${j.hours_min} - ${j.hours_max} hrs | <strong>Date:</strong> ${j.date_needed}</p>
+          <p><strong>Est. Time:</strong> ${j.hours_min} - ${j.hours_max} hrs | <strong>Date Needed:</strong> ${j.date_needed}</p>
           <p><strong>Contact:</strong> ${j.contact_phone}</p>
         </div>
       `).join('');
@@ -113,11 +137,10 @@
         is_emergency: document.getElementById('is_emergency').checked
       }]);
 
-      if (error) {
-        alert('Error posting job: ' + error.message);
-      } else {
+      if (error) alert('Error posting job: ' + error.message);
+      else {
         document.getElementById('job-form').reset();
-        fetchJobs();
+        fetchJobs(); // Refresh the list
       }
     });
 

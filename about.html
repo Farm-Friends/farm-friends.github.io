@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About & Guide - Farm Friends</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Silences the favicon 404 Not Found error -->
+  <link rel="icon" href="data:,">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -16,7 +18,6 @@
       </div>
       <nav class="nav-links" style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
         <a href="jobs.html" style="color: #3b82f6; text-decoration: none; font-size: 14px;">Jobs</a>
-        <a href="about.html" style="color: #10b981; text-decoration: none; font-weight: bold; font-size: 14px;">About</a>
         <a href="profile.html" style="color: #10b981; text-decoration: none; font-weight: bold; font-size: 14px;">My Profile</a>
         <a href="grievance.html" style="color: #ef4444; text-decoration: none; font-size: 14px;">File Grievance</a>
         <a id="admin-link" href="admin.html" style="display: none; color: #f59e0b; text-decoration: none; font-size: 14px; font-weight: bold;">Admin Panel</a>
@@ -122,26 +123,37 @@
     </main>
   </div>
 
-  <script src="app.js"></script>
   <script>
-    // Security Guard & Auth Management
+    // Initialize Supabase Client
+    const SUPABASE_URL = 'https://mokdqdrcqlfmjrpjnebo.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_f-4JIgGVXuiJueHS-IfcxQ_VQhcEZv1';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Security Guard & Role Management
     document.addEventListener('DOMContentLoaded', async () => {
-      // Check Supabase session
-      if (typeof supabaseClient !== 'undefined') {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) {
-          window.location.href = 'index.html'; // Redirect unauthorized users
-        }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (!session) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Check if user is admin to display the Admin Panel link
+      const currentUserId = session.user.id;
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserId)
+        .single();
+
+      if (profile && profile.role === 'admin') {
+        document.getElementById('admin-link').style.display = 'inline';
       }
     });
 
     // Logout Functionality
     async function logout() {
-      if (typeof supabaseClient !== 'undefined') {
-        await supabaseClient.auth.signOut();
-      } else if (typeof supabase !== 'undefined') {
-        await supabase.auth.signOut();
-      }
+      await supabaseClient.auth.signOut();
       window.location.href = 'index.html';
     }
   </script>
